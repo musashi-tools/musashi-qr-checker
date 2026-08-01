@@ -236,77 +236,133 @@
         };
     }
 
-    async function startScan(targetId) {
-        currentTarget = targetId;
+async function startScan(targetId) {
+    currentTarget = targetId;
 
-        const reader = document.getElementById("reader");
-        const scanGuide = document.getElementById("scanGuide");
+    const reader = document.getElementById("reader");
+    const scanGuide = document.getElementById("scanGuide");
 
-        reader.style.display = "block";
-        scanGuide.style.display = "block";
+    reader.style.display = "block";
+    scanGuide.style.display = "block";
 
-        if (scanner !== null) {
-            try {
-                await scanner.stop();
-            } catch (error) {
-                console.log(error);
-            }
-
-            scanner.clear();
-        }
-
-        scanner = new Html5Qrcode("reader", {
-            formatsToSupport: [
-                Html5QrcodeSupportedFormats.QR_CODE
-            ],
-            verbose: false
-        });
-
+    if (scanner !== null) {
         try {
-            await scanner.start(
-                {
-                    facingMode: {
-                        exact: "environment"
-                    }
-                },
-                {
-                    fps: 15,
-
-                    aspectRatio: 1.777778,
-
-                    qrbox: function(viewfinderWidth, viewfinderHeight) {
-                        const width = Math.floor(viewfinderWidth * 0.85);
-                        const height = Math.floor(viewfinderHeight * 0.65);
-
-                        return {
-                            width: width,
-                            height: height
-                        };
-                    },
-
-                    videoConstraints: {
-                        facingMode: "environment",
-                        width: {
-                            ideal: 1920
-                        },
-                        height: {
-                            ideal: 1080
-                        },
-                        focusMode: "continuous"
-                    }
-                },
+            await scanner.stop();
         } catch (error) {
-            reader.style.display = "none";
-            scanGuide.style.display = "none";
-
-            showError(
-                "カメラを起動できませんでした。<br>" +
-                "カメラの使用許可を確認してください。"
-            );
-
-            console.error(error);
+            console.log(error);
         }
+
+        scanner.clear();
+        scanner = null;
     }
+
+    scanner = new Html5Qrcode("reader", {
+        formatsToSupport: [
+            Html5QrcodeSupportedFormats.QR_CODE
+        ],
+        verbose: false
+    });
+
+    try {
+        await scanner.start(
+            {
+                facingMode: "environment"
+            },
+            {
+                fps: 15,
+                aspectRatio: 1.777778,
+
+                qrbox: function(viewfinderWidth, viewfinderHeight) {
+                    const size = Math.floor(
+                        Math.min(viewfinderWidth, viewfinderHeight) * 0.9
+                    );
+
+                    return {
+                        width: size,
+                        height: size
+                    };
+                },
+
+                videoConstraints: {
+                    facingMode: "environment",
+                    width: {
+                        ideal: 1920
+                    },
+                    height: {
+                        ideal: 1080
+                    }
+                }
+            },
+
+            async function(decodedText) {
+                document.getElementById(currentTarget).value = decodedText;
+
+                const parsed = parseQr(decodedText);
+
+                if (currentTarget === "qr1") {
+                    updateReadStatus("status1", parsed);
+                } else {
+                    updateReadStatus("status2", parsed);
+                }
+
+                try {
+                    await scanner.stop();
+                } catch (error) {
+                    console.log(error);
+                }
+
+                scanner.clear();
+                scanner = null;
+
+                reader.style.display = "none";
+                scanGuide.style.display = "none";
+            },
+
+            function(errorMessage) {
+                // QRコードを探している途中のエラーは表示しない
+            }
+        );
+
+        // 端末がズームに対応している場合、自動で約2倍にする
+        try {
+            const capabilities =
+                scanner.getRunningTrackCapabilities();
+
+            if (
+                capabilities.zoom &&
+                capabilities.zoom.max > capabilities.zoom.min
+            ) {
+                const zoomValue = Math.min(
+                    2,
+                    capabilities.zoom.max
+                );
+
+                await scanner.applyVideoConstraints({
+                    advanced: [
+                        {
+                            zoom: zoomValue
+                        }
+                    ]
+                });
+            }
+        } catch (zoomError) {
+            // ズーム非対応端末では何もしない
+            console.log("ズーム非対応:", zoomError);
+        }
+
+    } catch (error) {
+        reader.style.display = "none";
+        scanGuide.style.display = "none";
+
+        showError(
+            "カメラを起動できませんでした。<br>" +
+            "ChromeまたはSafariで開き、" +
+            "カメラの使用を許可してください。"
+        );
+
+        console.error(error);
+    }
+}
 
     function updateReadStatus(statusId, parsed) {
         const status = document.getElementById(statusId);
