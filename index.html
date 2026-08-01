@@ -255,51 +255,46 @@
             scanner.clear();
         }
 
-        scanner = new Html5Qrcode("reader");
+        scanner = new Html5Qrcode("reader", {
+            formatsToSupport: [
+                Html5QrcodeSupportedFormats.QR_CODE
+            ],
+            verbose: false
+        });
 
         try {
             await scanner.start(
-                { facingMode: "environment" },
                 {
-                    fps: 10,
+                    facingMode: {
+                        exact: "environment"
+                    }
+                },
+                {
+                    fps: 15,
+
+                    aspectRatio: 1.777778,
+
                     qrbox: function(viewfinderWidth, viewfinderHeight) {
-                        const size = Math.floor(
-                            Math.min(viewfinderWidth, viewfinderHeight) * 0.7
-                        );
+                        const width = Math.floor(viewfinderWidth * 0.85);
+                        const height = Math.floor(viewfinderHeight * 0.65);
 
                         return {
-                            width: size,
-                            height: size
+                            width: width,
+                            height: height
                         };
+                    },
+
+                    videoConstraints: {
+                        facingMode: "environment",
+                        width: {
+                            ideal: 1920
+                        },
+                        height: {
+                            ideal: 1080
+                        },
+                        focusMode: "continuous"
                     }
                 },
-                async function(decodedText) {
-                    document.getElementById(currentTarget).value = decodedText;
-
-                    const parsed = parseQr(decodedText);
-
-                    if (currentTarget === "qr1") {
-                        updateReadStatus("status1", parsed);
-                    } else {
-                        updateReadStatus("status2", parsed);
-                    }
-
-                    try {
-                        await scanner.stop();
-                    } catch (error) {
-                        console.log(error);
-                    }
-
-                    scanner.clear();
-                    scanner = null;
-
-                    reader.style.display = "none";
-                    scanGuide.style.display = "none";
-                },
-                function(errorMessage) {
-                    // QRを探している途中のエラーは表示しない
-                }
-            );
         } catch (error) {
             reader.style.display = "none";
             scanGuide.style.display = "none";
