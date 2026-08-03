@@ -15,7 +15,7 @@
 
         body {
             margin: 0;
-            padding: 16px;
+            padding: 8px;
             font-family: sans-serif;
             background: #f3f4f6;
         }
@@ -27,32 +27,32 @@
         }
 
         h1 {
-            margin: 8px 0 20px;
+            margin: 2px 0 8px;
             text-align: center;
-            font-size: 28px;
+            font-size: 22px;
         }
 
         .card {
-            margin-bottom: 16px;
-            padding: 18px;
+            margin-bottom: 8px;
+            padding: 10px;
             background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+            border-radius: 10px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
         }
 
         .card h2 {
-            margin-top: 0;
-            font-size: 21px;
+            margin: 0 0 4px;
+            font-size: 17px;
         }
 
         button {
             width: 100%;
-            min-height: 58px;
-            margin-top: 10px;
-            padding: 12px;
+            min-height: 42px;
+            margin-top: 4px;
+            padding: 8px;
             border: none;
-            border-radius: 10px;
-            font-size: 19px;
+            border-radius: 8px;
+            font-size: 16px;
             font-weight: bold;
             cursor: pointer;
         }
@@ -73,11 +73,15 @@
         }
 
         .read-status {
-            margin-top: 12px;
-            padding: 12px;
-            border-radius: 8px;
+            margin-top: 5px;
+            padding: 7px 8px;
+            border-radius: 6px;
             background: #eee;
-            font-size: 16px;
+            font-size: 13px;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .read-complete {
@@ -245,6 +249,13 @@ async function startScan(targetId) {
     reader.style.display = "block";
     scanGuide.style.display = "block";
 
+    setTimeout(function() {
+        reader.scrollIntoView({
+            behavior: "smooth",
+            block: "center"
+        });
+    }, 150);
+
     if (scanner !== null) {
         try {
             await scanner.stop();
@@ -377,11 +388,10 @@ async function startScan(targetId) {
             "******" + parsed.patientId.slice(-4);
 
         status.className = "read-status read-complete";
-        status.innerHTML =
-            "読取完了<br>" +
-            "患者ID：" + maskedId + "<br>" +
-            "服用日：" + parsed.date + "<br>" +
-            "用法コード：" + parsed.usageCode;
+        status.textContent =
+            "読取済　ID:" + maskedId +
+            "　日付:" + parsed.date +
+            "　用法:" + parsed.usageCode;
     }
 
     function checkQr() {
