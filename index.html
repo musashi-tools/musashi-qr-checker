@@ -456,14 +456,20 @@ async function startScan(targetId) {
                 '<div class="result-title">照合NG</div>' +
                 "ホチキス止めしないでください。" +
                 '<div class="comparison">' +
-                "患者ID：" +
-                (patientMatch ? "一致" : "不一致") +
-                "<br>" +
-                "服用日：" +
-                (dateMatch ? "一致" : "不一致") +
-                "<br>" +
-                "用法：" +
-                (usageMatch ? "一致" : "不一致") +
+            "患者ID：" +
+            (patientMatch
+                ? '<span style="color:#198754;font-weight:bold;">一致</span>'
+                : '<span style="color:#dc3545;font-weight:bold;">不一致</span>') +
+            "<br>" +
+            "服用日：" +
+            (dateMatch
+                ? '<span style="color:#198754;font-weight:bold;">一致</span>'
+                : '<span style="color:#dc3545;font-weight:bold;">不一致</span>') +
+            "<br>" +
+            "用法：" +
+            (usageMatch
+                ? '<span style="color:#198754;font-weight:bold;">一致</span>'
+                : '<span style="color:#dc3545;font-weight:bold;">不一致</span>') +
                 "</div>";
         }
     }
