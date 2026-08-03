@@ -2,11 +2,13 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>QR照合アプリ</title>
-
-    <script src="https://unpkg.com/html5-qrcode"></script>
 
     <style>
         * {
@@ -14,162 +16,71 @@
         }
 
         body {
+            min-height: 100vh;
             margin: 0;
-            padding: 8px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-family: sans-serif;
             background: #f3f4f6;
         }
 
         .container {
             width: 100%;
-            max-width: 600px;
-            margin: 0 auto;
+            max-width: 480px;
         }
-
-        .scan-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-        }        
 
         h1 {
-            margin: 2px 0 8px;
+            margin: 0 0 8px;
             text-align: center;
-            font-size: 22px;
+            font-size: 28px;
         }
 
-        .card {
-            margin-bottom: 8px;
-            padding: 10px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
-            min-width: 0;
-        }
-
-        .card h2 {
-            margin: 0 0 6px;
-            font-size: 16px;
+        .description {
+            margin: 0 0 24px;
             text-align: center;
-            white-space: nowrap;
-        }
-
-        button {
-            width: 100%;
-            min-height: 40px;
-            margin-top: 4px;
-            padding: 7px 5px;
-            border: none;
-            border-radius: 8px;
+            color: #555;
             font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
         }
 
-        .scan-button {
-            background: #1565c0;
-            color: white;
-        }
-
-        .check-button {
-            background: #333;
-            color: white;
-        }
-
-        .reset-button {
-            background: #ddd;
-            color: #222;
-        }
-
-        .read-status {
-            margin-top: 5px;
-            padding: 6px 4px;
-            border-radius: 6px;
-            background: #eee;
-            font-size: 11px;
-            line-height: 1.2;
-            text-align: center;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .read-complete {
-            background: #dff4e2;
-        }
-
-        #reader{
-            width:260px;
-            height:260px;
-
-            max-width:85vw;
-            max-height:85vw;
-
-            margin:10px auto;
-            overflow:hidden;
-        }
-
-        #scanGuide {
-            display: none;
-            margin: 10px 0;
-            padding: 12px;
-            text-align: center;
-            background: #fff3cd;
-            border-radius: 8px;
-            font-weight: bold;
-        }
-
-        #result {
-            display: none;
-            margin-top: 18px;
-            padding: 24px 16px;
-            border-radius: 12px;
-            text-align: center;
-            font-size: 20px;
-            font-weight: bold;
-        }
-
-        #result.ok {
+        .mode-link {
             display: block;
-            color: #125d20;
-            background: #d9f5df;
-            border: 4px solid #218838;
-        }
-
-        #result.ng {
-            display: block;
-            color: #82151d;
-            background: #ffd9dc;
-            border: 4px solid #dc3545;
-        }
-
-        #result.error {
-            display: block;
-            color: #664d03;
-            background: #fff3cd;
-            border: 4px solid #ffca2c;
-        }
-
-        #result.warning {
-            display: block;
-            color: #664d03;
-            background: #fff3cd;
-            border: 4px solid #ffca2c;
-        }
-
-        .result-title {
             margin-bottom: 16px;
-            font-size: 34px;
+            padding: 22px 16px;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 14px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.16);
         }
 
-        .comparison {
-            margin-top: 12px;
-            line-height: 1.8;
-            text-align: left;
+        .mode-title {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 24px;
+            font-weight: bold;
         }
 
-        .hidden-data {
-            display: none;
+        .mode-description {
+            display: block;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        .pharmacy-mode {
+            background: #198754;
+        }
+
+        .onsite-mode {
+            background: #1565c0;
+        }
+
+        .version {
+            margin-top: 24px;
+            text-align: center;
+            color: #777;
+            font-size: 12px;
         }
     </style>
 </head>
@@ -180,508 +91,35 @@
 
     <h1>QR照合アプリ</h1>
 
-    <div class="scan-grid">
+    <p class="description">
+        使用するモードを選択してください
+    </p>
 
-        <div class="card">
-            <h2>① 納品済み薬</h2>
+    <a class="mode-link pharmacy-mode" href="pharmacy.html">
+        <span class="mode-title">
+            薬局モード
+        </span>
 
-            <button class="scan-button" onclick="startScan('qr1')">
-                納品済み薬を読む
-            </button>
+        <span class="mode-description">
+            ケースセット前の最終チェック
+        </span>
+    </a>
 
-            <div id="status1" class="read-status">
-                未読取
-            </div>
+    <a class="mode-link onsite-mode" href="onsite.html">
+        <span class="mode-title">
+            現地作業モード
+        </span>
 
-            <textarea id="qr1" class="hidden-data"></textarea>
-        </div>
+        <span class="mode-description">
+            臨時薬のホチキス止め照合
+        </span>
+    </a>
 
-        <div class="card">
-            <h2>② 臨時薬</h2>
-
-            <button class="scan-button" onclick="startScan('qr2')">
-                臨時薬を読む
-            </button>
-
-            <div id="status2" class="read-status">
-                未読取
-            </div>
-
-            <textarea id="qr2" class="hidden-data"></textarea>
-        </div>
-
+    <div class="version">
+        試作版
     </div>
-
-    <div id="scanGuide">
-        QRコードを枠内に写してください
-    </div>
-
-    <div id="reader"></div>
-
-    <button class="check-button" onclick="checkQr()">
-        照合する
-    </button>
-
-    <div id="result"></div>
-
-    <button class="reset-button" onclick="resetAll()">
-        最初からやり直す
-    </button>
 
 </div>
-
-<script>
-    let scanner = null;
-    let currentTarget = "";
-
-    function parseQr(qrText) {
-        const items = qrText
-            .trim()
-            .split(",")
-            .map(function(item) {
-                return item.trim();
-            });
-
-        // 分包紙QR
-        // 患者ID,服用日,用法コード,分包機ID
-        if (items.length === 4) {
-            const patientId = items[0];
-            const date = items[1];
-            const usageCode = items[2];
-
-            if (
-                patientId === "" ||
-                date === "" ||
-                usageCode === ""
-            ) {
-                return null;
-            }
-
-            return {
-                type: "pharmacy",
-                typeName: "分包紙",
-                patientId: patientId,
-                date: date,
-                usageCode: usageCode
-            };
-        }
-
-        // 服やっくんQR
-        // 施設患者ID,服用日,用法コード,無視,無視
-        if (items.length === 5) {
-            const patientId = items[0];
-            const date = items[1];
-            const usageCode = items[2];
-
-            if (
-                patientId === "" ||
-                date === "" ||
-                usageCode === ""
-            ) {
-                return null;
-            }
-
-            return {
-                type: "fukuyakkun",
-                typeName: "服やっくん",
-                patientId: patientId,
-                date: date,
-                usageCode: usageCode
-            };
-        }
-
-        return null;
-    }
-
-async function startScan(targetId) {
-    currentTarget = targetId;
-
-    const reader = document.getElementById("reader");
-    const scanGuide = document.getElementById("scanGuide");
-
-    reader.style.display = "block";
-    scanGuide.style.display = "block";
-
-    setTimeout(function() {
-        reader.scrollIntoView({
-            behavior: "smooth",
-            block: "center"
-        });
-    }, 150);
-
-    if (scanner !== null) {
-        try {
-            await scanner.stop();
-        } catch (error) {
-            console.log(error);
-        }
-
-        scanner.clear();
-        scanner = null;
-    }
-
-    scanner = new Html5Qrcode("reader", {
-        formatsToSupport: [
-            Html5QrcodeSupportedFormats.QR_CODE
-        ],
-        experimentalFeatures: {
-            useBarCodeDetectorIfSupported: true
-        },
-        verbose: false
-    });
-
-    try {
-        await scanner.start(
-            {
-                facingMode: "environment"
-            },
-            {
-                fps: 20,
-                aspectRatio: 1.0,
-
-                qrbox: function(viewfinderWidth, viewfinderHeight) {
-                    const size = Math.min(viewfinderWidth, viewfinderHeight) * 0.78;
-                    return {
-                        width: size,
-                        height: size
-                    };
-                },
-
-                videoConstraints: {
-                    facingMode: "environment",
-                    width: {
-                        ideal: 1920
-                    },
-                    height: {
-                        ideal: 1080
-                    }
-                }
-            },
-
-            async function(decodedText) {
-                // 読み取った対象を保存する
-                const scannedTarget = currentTarget;
-
-                document.getElementById(scannedTarget).value = decodedText;
-
-                const parsed = parseQr(decodedText);
-
-                if (scannedTarget === "qr1") {
-                    updateReadStatus("status1", parsed);
-                } else {
-                    updateReadStatus("status2", parsed);
-                }
-
-                try {
-                    await scanner.stop();
-                } catch (error) {
-                    console.log(error);
-                }
-
-                scanner.clear();
-                scanner = null;
-
-                reader.style.display = "none";
-                scanGuide.style.display = "none";
-
-                // 正常に読み取れた場合だけ次の処理へ進む
-                if (parsed !== null) {
-
-                    // 納品済み薬の読取後は、自動で臨時薬の読取を開始
-                    if (scannedTarget === "qr1") {
-                        setTimeout(function() {
-                            startScan("qr2");
-                        }, 500);
-                    }
-
-                    // 臨時薬の読取後は、自動で照合を実行
-                    if (scannedTarget === "qr2") {
-                        setTimeout(function() {
-                            checkQr();
-                        }, 300);
-                    }
-                }
-            },
-
-            function(errorMessage) {
-                // QRコードを探している途中のエラーは表示しない
-            }
-        );
-
-        // 対応端末では連続フォーカスとズームを適用する
-        try {
-            const capabilities =
-                scanner.getRunningTrackCapabilities();
-
-            const advancedSettings = {};
-
-            // 連続オートフォーカスに対応している場合
-            if (
-                Array.isArray(capabilities.focusMode) &&
-                capabilities.focusMode.includes("continuous")
-            ) {
-                advancedSettings.focusMode = "continuous";
-            }
-
-            // ズーム対応端末では2.5倍を上限に設定
-            if (
-                capabilities.zoom &&
-                typeof capabilities.zoom.max === "number"
-            ) {
-                advancedSettings.zoom = Math.min(
-                    2.5,
-                    capabilities.zoom.max
-                );
-            }
-
-            if (Object.keys(advancedSettings).length > 0) {
-                await scanner.applyVideoConstraints({
-                    advanced: [advancedSettings]
-                });
-            }
-
-            console.log(
-                "カメラ能力:",
-                capabilities
-            );
-
-        } catch (cameraSettingError) {
-            // 非対応端末では通常設定のまま継続
-            console.log(
-                "追加カメラ設定は非対応:",
-                cameraSettingError
-            );
-        }
-
-    } catch (error) {
-        reader.style.display = "none";
-        scanGuide.style.display = "none";
-
-        showError(
-            "カメラを起動できませんでした。<br>" +
-            "ChromeまたはSafariで開き、" +
-            "カメラの使用を許可してください。"
-        );
-
-        console.error(error);
-    }
-}
-
-    function updateReadStatus(statusId, parsed) {
-        const status = document.getElementById(statusId);
-
-        if (parsed === null) {
-            status.className = "read-status";
-            status.textContent = "QR形式エラー";
-            return;
-        }
-
-        const maskedId =
-            "******" + parsed.patientId.slice(-4);
-
-        status.className = "read-status read-complete";
-        status.textContent =
-            parsed.typeName +
-            "　" +
-            maskedId +
-            " / " +
-            parsed.date +
-            " / " +
-            parsed.usageCode;
-    }
-
-    function matchLabel(isMatch) {
-        if (isMatch) {
-            return '<span style="color:#198754;font-weight:bold;">✔ 一致</span>';
-        }
-
-        return '<span style="color:#dc3545;font-weight:bold;">✖ 不一致</span>';
-    }    
-
-    function checkQr() {
-        const qr1Text =
-            document.getElementById("qr1").value;
-
-        const qr2Text =
-            document.getElementById("qr2").value;
-
-        if (
-            qr1Text.trim() === "" ||
-            qr2Text.trim() === ""
-        ) {
-            showError(
-                "2つのQRコードを読み取ってから照合してください。"
-            );
-            return;
-        }
-
-        const qr1 = parseQr(qr1Text);
-        const qr2 = parseQr(qr2Text);
-
-        if (qr1 === null || qr2 === null) {
-            showError(
-                "QR形式エラー<br>" +
-                "分包紙または服やっくんのQRか確認してください。"
-            );
-            return;
-        }
-
-        const sameType =
-            qr1.type === qr2.type;
-
-        const patientMatch =
-            qr1.patientId === qr2.patientId;
-
-        const dateMatch =
-            qr1.date === qr2.date;
-
-        const usageMatch =
-            qr1.usageCode === qr2.usageCode;
-
-        const result =
-            document.getElementById("result");
-
-        // 同じ種類同士
-        if (sameType) {
-            if (
-                patientMatch &&
-                dateMatch &&
-                usageMatch
-            ) {
-                result.className = "ok";
-
-                result.innerHTML =
-                    '<div class="result-title">照合OK</div>' +
-                    "ホチキス止め可能です。" +
-                    '<div class="comparison">' +
-                    "QR種類：" + qr1.typeName + "<br>" +
-                    "患者ID：" + matchLabel(true) + "<br>" +
-                    "服用日：" + matchLabel(true) + "<br>" +
-                    "用法：" + matchLabel(true) +
-                    "</div>";
-
-                return;
-            }
-
-            result.className = "ng";
-
-            result.innerHTML =
-                '<div class="result-title">照合NG</div>' +
-                "ホチキス止めしないでください。" +
-                '<div class="comparison">' +
-                "QR種類：" + qr1.typeName + "<br>" +
-                "患者ID：" +
-                matchLabel(patientMatch) +
-                "<br>" +
-                "服用日：" +
-                matchLabel(dateMatch) +
-                "<br>" +
-                "用法：" +
-                matchLabel(usageMatch) +
-                "</div>";
-
-            return;
-        }
-
-        // 異なる種類で、日付または用法も違う場合
-        if (!dateMatch || !usageMatch) {
-            result.className = "ng";
-
-            result.innerHTML =
-                '<div class="result-title">照合NG</div>' +
-                "ホチキス止めしないでください。" +
-                '<div class="comparison">' +
-                "QR種類：" +
-                qr1.typeName +
-                " × " +
-                qr2.typeName +
-                "<br>" +
-                "患者ID：" +
-                '<span style="color:#856404;font-weight:bold;">照合不能</span>' +
-                "<br>" +
-                "服用日：" +
-                matchLabel(dateMatch) +
-                "<br>" +
-                "用法：" +
-                matchLabel(usageMatch) +
-                "</div>";
-
-            return;
-        }
-
-        // 異なる種類で、日付と用法は一致
-        result.className = "warning";
-
-        result.innerHTML =
-            '<div class="result-title">自動照合できません</div>' +
-            "患者IDの体系が異なります。" +
-            '<div class="comparison">' +
-            "QR種類：" +
-            qr1.typeName +
-            " × " +
-            qr2.typeName +
-            "<br>" +
-            "患者ID：" +
-            '<span style="color:#856404;font-weight:bold;">照合不能</span>' +
-            "<br>" +
-            "服用日：" +
-            matchLabel(true) +
-            "<br>" +
-            "用法：" +
-            matchLabel(true) +
-            "</div>" +
-            "<br>" +
-            "氏名などで同一患者か目視確認してください。";
-    }
-
-    function showError(message) {
-        const result = document.getElementById("result");
-
-        result.className = "error";
-        result.innerHTML =
-            '<div class="result-title">確認してください</div>' +
-            message;
-    }
-
-    async function resetAll() {
-        if (scanner !== null) {
-            try {
-                await scanner.stop();
-            } catch (error) {
-                console.log(error);
-            }
-
-            scanner.clear();
-            scanner = null;
-        }
-
-        document.getElementById("qr1").value = "";
-        document.getElementById("qr2").value = "";
-
-        document.getElementById("status1").className =
-            "read-status";
-
-        document.getElementById("status1").innerHTML =
-            "未読取";
-
-        document.getElementById("status2").className =
-            "read-status";
-
-        document.getElementById("status2").innerHTML =
-            "未読取";
-
-        document.getElementById("reader").style.display =
-            "none";
-
-        document.getElementById("scanGuide").style.display =
-            "none";
-
-        const result = document.getElementById("result");
-
-        result.className = "";
-        result.innerHTML = "";
-    }
-</script>
 
 </body>
 </html>
