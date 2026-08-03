@@ -346,12 +346,23 @@ async function startScan(targetId) {
 
                 reader.style.display = "none";
                 scanGuide.style.display = "none";
+                
+                // 正常に読み取れた場合だけ次の処理へ進む
+                if (parsed !== null) {
 
-                // 納品済み薬を読み終えたら、自動で臨時薬の読取を開始
-                if (scannedTarget === "qr1" && parsed !== null) {
-                    setTimeout(function() {
-                        startScan("qr2");
-                    }, 300);
+                    // 納品済み薬の読取後は、自動で臨時薬の読取を開始
+                    if (scannedTarget === "qr1") {
+                        setTimeout(function() {
+                            startScan("qr2");
+                        }, 500);
+                    }
+
+                    // 臨時薬の読取後は、自動で照合を実行
+                    if (scannedTarget === "qr2") {
+                        setTimeout(function() {
+                            checkQr();
+                        }, 300);
+                    }
                 }
             },
 
