@@ -150,6 +150,13 @@
             border: 4px solid #ffca2c;
         }
 
+        #result.warning {
+            display: block;
+            color: #664d03;
+            background: #fff3cd;
+            border: 4px solid #ffca2c;
+        }
+
         .result-title {
             margin-bottom: 16px;
             font-size: 34px;
@@ -228,32 +235,62 @@
     let currentTarget = "";
 
     function parseQr(qrText) {
-        const items = qrText.trim().split(",");
+        const items = qrText
+            .trim()
+            .split(",")
+            .map(function(item) {
+                return item.trim();
+            });
 
-        if (items.length !== 4) {
-            return null;
+        // 分包紙QR
+        // 患者ID,服用日,用法コード,分包機ID
+        if (items.length === 4) {
+            const patientId = items[0];
+            const date = items[1];
+            const usageCode = items[2];
+
+            if (
+                patientId === "" ||
+                date === "" ||
+                usageCode === ""
+            ) {
+                return null;
+            }
+
+            return {
+                type: "pharmacy",
+                typeName: "分包紙",
+                patientId: patientId,
+                date: date,
+                usageCode: usageCode
+            };
         }
 
-        const patientId = items[0].trim();
-        const date = items[1].trim();
-        const usageCode = items[2].trim();
-        const machineId = items[3].trim();
+        // 服やっくんQR
+        // 施設患者ID,服用日,用法コード,無視,無視
+        if (items.length === 5) {
+            const patientId = items[0];
+            const date = items[1];
+            const usageCode = items[2];
 
-        if (
-            patientId === "" ||
-            date === "" ||
-            usageCode === "" ||
-            machineId === ""
-        ) {
-            return null;
+            if (
+                patientId === "" ||
+                date === "" ||
+                usageCode === ""
+            ) {
+                return null;
+            }
+
+            return {
+                type: "fukuyakkun",
+                typeName: "服やっくん",
+                patientId: patientId,
+                date: date,
+                usageCode: usageCode
+            };
         }
 
-        return {
-            patientId: patientId,
-            date: date,
-            usageCode: usageCode,
-            machineId: machineId
-        };
+        return null;
     }
 
 async function startScan(targetId) {
@@ -346,7 +383,7 @@ async function startScan(targetId) {
 
                 reader.style.display = "none";
                 scanGuide.style.display = "none";
-                
+
                 // 正常に読み取れた場合だけ次の処理へ進む
                 if (parsed !== null) {
 
@@ -435,7 +472,7 @@ async function startScan(targetId) {
 
         if (parsed === null) {
             status.className = "read-status";
-            status.innerHTML = "QR形式エラー";
+            status.textContent = "QR形式エラー";
             return;
         }
 
@@ -444,16 +481,34 @@ async function startScan(targetId) {
 
         status.className = "read-status read-complete";
         status.textContent =
-            "読取済　ID:" + maskedId +
-            "　日付:" + parsed.date +
-            "　用法:" + parsed.usageCode;
+            parsed.typeName +
+            "　" +
+            maskedId +
+            " / " +
+            parsed.date +
+            " / " +
+            parsed.usageCode;
     }
 
-    function checkQr() {
-        const qr1Text = document.getElementById("qr1").value;
-        const qr2Text = document.getElementById("qr2").value;
+    function matchLabel(isMatch) {
+        if (isMatch) {
+            return '<span style="color:#198754;font-weight:bold;">✔ 一致</span>';
+        }
 
-        if (qr1Text.trim() === "" || qr2Text.trim() === "") {
+        return '<span style="color:#dc3545;font-weight:bold;">✖ 不一致</span>';
+    }    
+
+    function checkQr() {
+        const qr1Text =
+            document.getElementById("qr1").value;
+
+        const qr2Text =
+            document.getElementById("qr2").value;
+
+        if (
+            qr1Text.trim() === "" ||
+            qr2Text.trim() === ""
+        ) {
             showError(
                 "2つのQRコードを読み取ってから照合してください。"
             );
@@ -466,10 +521,13 @@ async function startScan(targetId) {
         if (qr1 === null || qr2 === null) {
             showError(
                 "QR形式エラー<br>" +
-                "想定した分包紙のQRコードか確認してください。"
+                "分包紙または服やっくんのQRか確認してください。"
             );
             return;
         }
+
+        const sameType =
+            qr1.type === qr2.type;
 
         const patientMatch =
             qr1.patientId === qr2.patientId;
@@ -480,40 +538,100 @@ async function startScan(targetId) {
         const usageMatch =
             qr1.usageCode === qr2.usageCode;
 
-        const result = document.getElementById("result");
+        const result =
+            document.getElementById("result");
 
-        if (patientMatch && dateMatch && usageMatch) {
-            result.className = "ok";
+        // 同じ種類同士
+        if (sameType) {
+            if (
+                patientMatch &&
+                dateMatch &&
+                usageMatch
+            ) {
+                result.className = "ok";
 
-            result.innerHTML =
-                '<div class="result-title">照合OK</div>' +
-                "ホチキス止め可能です。<br><br>" +
-                "患者ID：一致<br>" +
-                "服用日：一致<br>" +
-                "用法：一致";
-        } else {
+                result.innerHTML =
+                    '<div class="result-title">照合OK</div>' +
+                    "ホチキス止め可能です。" +
+                    '<div class="comparison">' +
+                    "QR種類：" + qr1.typeName + "<br>" +
+                    "患者ID：" + matchLabel(true) + "<br>" +
+                    "服用日：" + matchLabel(true) + "<br>" +
+                    "用法：" + matchLabel(true) +
+                    "</div>";
+
+                return;
+            }
+
             result.className = "ng";
 
             result.innerHTML =
                 '<div class="result-title">照合NG</div>' +
                 "ホチキス止めしないでください。" +
                 '<div class="comparison">' +
+                "QR種類：" + qr1.typeName + "<br>" +
+                "患者ID：" +
+                matchLabel(patientMatch) +
+                "<br>" +
+                "服用日：" +
+                matchLabel(dateMatch) +
+                "<br>" +
+                "用法：" +
+                matchLabel(usageMatch) +
+                "</div>";
+
+            return;
+        }
+
+        // 異なる種類で、日付または用法も違う場合
+        if (!dateMatch || !usageMatch) {
+            result.className = "ng";
+
+            result.innerHTML =
+                '<div class="result-title">照合NG</div>' +
+                "ホチキス止めしないでください。" +
+                '<div class="comparison">' +
+                "QR種類：" +
+                qr1.typeName +
+                " × " +
+                qr2.typeName +
+                "<br>" +
+                "患者ID：" +
+                '<span style="color:#856404;font-weight:bold;">照合不能</span>' +
+                "<br>" +
+                "服用日：" +
+                matchLabel(dateMatch) +
+                "<br>" +
+                "用法：" +
+                matchLabel(usageMatch) +
+                "</div>";
+
+            return;
+        }
+
+        // 異なる種類で、日付と用法は一致
+        result.className = "warning";
+
+        result.innerHTML =
+            '<div class="result-title">自動照合できません</div>' +
+            "患者IDの体系が異なります。" +
+            '<div class="comparison">' +
+            "QR種類：" +
+            qr1.typeName +
+            " × " +
+            qr2.typeName +
+            "<br>" +
             "患者ID：" +
-            (patientMatch
-                ? '<span style="color:#198754;font-weight:bold;">一致</span>'
-                : '<span style="color:#dc3545;font-weight:bold;">不一致</span>') +
+            '<span style="color:#856404;font-weight:bold;">照合不能</span>' +
             "<br>" +
             "服用日：" +
-            (dateMatch
-                ? '<span style="color:#198754;font-weight:bold;">一致</span>'
-                : '<span style="color:#dc3545;font-weight:bold;">不一致</span>') +
+            matchLabel(true) +
             "<br>" +
             "用法：" +
-            (usageMatch
-                ? '<span style="color:#198754;font-weight:bold;">一致</span>'
-                : '<span style="color:#dc3545;font-weight:bold;">不一致</span>') +
-                "</div>";
-        }
+            matchLabel(true) +
+            "</div>" +
+            "<br>" +
+            "氏名などで同一患者か目視確認してください。";
     }
 
     function showError(message) {
