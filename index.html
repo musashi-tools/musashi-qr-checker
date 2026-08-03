@@ -319,11 +319,14 @@ async function startScan(targetId) {
             },
 
             async function(decodedText) {
-                document.getElementById(currentTarget).value = decodedText;
+                // 読み取った対象を保存する
+                const scannedTarget = currentTarget;
+
+                document.getElementById(scannedTarget).value = decodedText;
 
                 const parsed = parseQr(decodedText);
 
-                if (currentTarget === "qr1") {
+                if (scannedTarget === "qr1") {
                     updateReadStatus("status1", parsed);
                 } else {
                     updateReadStatus("status2", parsed);
@@ -340,6 +343,13 @@ async function startScan(targetId) {
 
                 reader.style.display = "none";
                 scanGuide.style.display = "none";
+
+                // 納品済み薬を読み終えたら、自動で臨時薬の読取を開始
+                if (scannedTarget === "qr1" && parsed !== null) {
+                    setTimeout(function() {
+                        startScan("qr2");
+                    }, 300);
+                }
             },
 
             function(errorMessage) {
