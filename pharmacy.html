@@ -1,3 +1,244 @@
+
+これ
+
+ならんな
+
+これか？ちなみにターミナルのgitは認識されてないね
+
+どれ？
+
+どれ？
+
+はい
+
+これは？
+
+インストおわった。これは？
+
+成功！！
+
+これでいい？
+
+③ もし聞かれたら
+
+変更をステージしますか？
+
+みたいなメッセージが出たら
+
+「はい」
+
+これのあとに出てきたこれはなに？
+を押してください。
+
+のこってないけど
+
+これは？
+
+これ？
+
+ブラウザの方でこんなのも出てるけど
+
+これか？
+
+またこの画面出たけど
+
+なんか右下にでてきた
+
+なくね？
+
+これでええか？
+
+はいよ
+
+はい
+
+一応スクショ送っとくね
+
+どれ？
+
+
+これ出たけど
+
+これかな
+
+mian root で押しちゃったよ
+
+
+またこれでるけどいいの？
+
+これ
+
+
+Pasted code.html
+ファイル
+これで合ってる？
+
+生成された画像：カメラ撮影枠を小さくする調整ガイド
+
+
+編集
+
+
+生成された画像：QR照合アプリの検証画面
+
+
+編集
+
+
+
+Pasted code(1).html
+ファイル
+全部載せる
+
+
+onsite.html
+ファイル
+
+pharmacy.html
+ファイル
+はい
+
+その場合は、**「Webページとして保存」ではなく、「リンク先を保存」**すれば大丈夫です。
+
+もし私が出したリンクをクリックして開いてから Ctrl+S や「名前を付けて保存」をすると、
+
+pharmacy_mode_v1.html
+pharmacy_mode_v1_files
+のような_filesフォルダができることがあります。
+
+一番簡単な保存方法
+私が出した
+「pharmacy_mode_v1.htmlをダウンロード」
+をクリック
+
+ブラウザのダウンロードが始まる
+
+ダウンロードフォルダから、QR照合アプリのフォルダへ移動
+
+これなら_filesフォルダはできません。
+
+もし_filesフォルダができてしまったら
+pharmacy_mode_v1.htmlだけが欲しいのであれば、
+
+石橋 - あるある君システム_files
+
+石橋 - あるある君システム.html
+
+は削除してしまって大丈夫です。
+
+ちなみに…
+今回アップロードしたpharmacy_mode_v1.htmlですが、あとで見直したら第1版としては仕様を盛り込みすぎでした。
+
+薬局モードはこれから担当者の意見を反映しながら作っていくので、
+
+最初はもっとシンプルな骨組みから作る方が結果的に修正しやすいと思っています。
+
+私なら次は、
+
+カメラ起動
+
+QRが読める
+
+FIRST_DAY_ENDを認識する
+
+USAGE_ENDを認識する
+
+画面に現在の状態（初日・最終日）だけ表示する
+
+ここまでを「Ver0.1」として作り、その後に照合ロジックを積み上げていきます。
+
+その方が、一緒に動作確認しながら進められて、原因の切り分けもしやすいです。
+
+
+なんか保存できないんだけど。ソースとして送ってくれない？
+
+もちろん。コピーしやすいように、HTMLソースをテキストファイルにしました。
+
+pharmacy_mode_v1_source.txt
+
+開いたら、
+
+Ctrl + A
+
+Ctrl + C
+
+VS Codeのpharmacy.htmlを開く
+
+中身を全部消す
+
+Ctrl + V
+
+Ctrl + S
+
+で置き換えられます。
+
+元のHTMLファイルもこちらです。
+
+pharmacy_mode_v1.html
+
+
+
+pharmacy_mode_v1_source.txt
+ドキュメント
+
+
+pharmacy_mode_v1.html
+HTML
+
+
+なんとなくできてるんだけど、初日終了を読み込んだら初日だけで判定して表示して待機。
+次に最終日を読み込んだら結果表示をリセットして、用法終了を読み込んだら最終日の結果を表示して待機。
+次のQRが読み込まれたら結果表示をリセットしてみたいな具合がいいな
+
+1m 16s考えました
+その動きに修正できます。最新版を作りました。
+
+pharmacy_mode_v2.html
+
+pharmacy_mode_v2_source.txt
+
+今回の動作はこうです。
+
+初日の薬包を読む
+↓
+初日終了QR
+↓
+初日の結果を表示して待機
+↓
+最終日の1包目を読む
+↓
+初日の結果表示を消す
+↓
+最終日の薬包を読む
+↓
+用法終了QR
+↓
+最終日の結果を表示して待機
+↓
+次の用法の1包目を読む
+↓
+結果表示を消して、新しい初日チェック開始
+最終日終了時には、初日と最終日の包数も比較します。
+
+包数一致：最終日 照合OK
+
+包数不一致：最終日 照合NG
+
+今のpharmacy.htmlの中身を、Ver.2のソースで丸ごと置き換えてください。
+
+
+
+pharmacy_mode_v2.html
+HTML
+
+
+pharmacy_mode_v2_source.txt
+ドキュメント
+
+
+pharmacy_mode_v2_source.txt
+
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -301,10 +542,15 @@
     }
 
     function handleMedication(parsed) {
-        // 完了後に次の薬包を読んだら、新しい用法を自動開始
+        // 最終日の結果表示後、次の薬包を読んだら新しい用法を開始
         if (phase === "completed") {
-            clearSession(false);
+            clearSession(true);
             phase = "first";
+        }
+
+        // 初日の結果表示後、最終日の1包目を読んだら結果表示を消す
+        if (phase === "last" && lastBase === null) {
+            clearResult();
         }
 
         if (phase === "idle") {
@@ -393,9 +639,10 @@
                 return;
             }
 
+            showFirstDayResult();
             phase = "last";
             setPhase("最終日待ち");
-            setMessage("最終日の1包目を読み取ってください。");
+            setMessage("初日の確認は正常です。最終日の1包目を読み取ってください。");
             return;
         }
 
@@ -405,11 +652,26 @@
                 return;
             }
 
-            finishUsage();
+            showLastDayResult();
         }
     }
 
-    function finishUsage() {
+    function showFirstDayResult() {
+        const result = document.getElementById("result");
+
+        result.className = "ok";
+        result.innerHTML =
+            '<div class="result-title">初日 照合OK</div>' +
+            '<div class="comparison">' +
+            "QR種類：" + firstBase.typeName + "<br>" +
+            "患者ID：******" + firstBase.patientId.slice(-4) + "<br>" +
+            "用法：" + firstBase.usageCode + "<br>" +
+            "日付：" + firstBase.date + "<br>" +
+            "確認包数：" + firstCount + "包" +
+            "</div>";
+    }
+
+    function showLastDayResult() {
         const result = document.getElementById("result");
 
         if (firstCount !== lastCount) {
@@ -417,7 +679,7 @@
             setPhase("照合NG");
             result.className = "ng";
             result.innerHTML =
-                '<div class="result-title">照合NG</div>' +
+                '<div class="result-title">最終日 照合NG</div>' +
                 "初日と最終日の包数が一致しません。" +
                 '<div class="comparison">' +
                 "初日：" + firstBase.date + "　" + firstCount + "包<br>" +
@@ -430,19 +692,20 @@
         }
 
         phase = "completed";
-        setPhase("照合OK");
+        setPhase("次の用法待ち");
         result.className = "ok";
         result.innerHTML =
-            '<div class="result-title">照合OK</div>' +
+            '<div class="result-title">最終日 照合OK</div>' +
             '<div class="comparison">' +
-            "QR種類：" + firstBase.typeName + "<br>" +
-            "患者ID：******" + firstBase.patientId.slice(-4) + "<br>" +
-            "用法：" + firstBase.usageCode + "<br>" +
-            "初日：" + firstBase.date + "　" + firstCount + "包<br>" +
-            "最終日：" + lastBase.date + "　" + lastCount + "包" +
+            "QR種類：" + lastBase.typeName + "<br>" +
+            "患者ID：******" + lastBase.patientId.slice(-4) + "<br>" +
+            "用法：" + lastBase.usageCode + "<br>" +
+            "日付：" + lastBase.date + "<br>" +
+            "確認包数：" + lastCount + "包<br>" +
+            "初日との包数：一致" +
             "</div>";
 
-        setMessage("次の用法の1包目を読み取ると、自動で新しいチェックを開始します。");
+        setMessage("次の用法の1包目を読み取ると、結果表示を消して新しいチェックを開始します。");
     }
 
     async function processDecodedText(decodedText) {
@@ -591,7 +854,13 @@
         document.getElementById("startButton").style.display = "block";
     }
 
-    function clearSession(clearResult) {
+    function clearResult() {
+        const result = document.getElementById("result");
+        result.className = "";
+        result.innerHTML = "";
+    }
+
+    function clearSession(clearResultDisplay) {
         firstBase = null;
         lastBase = null;
         firstCount = 0;
@@ -600,10 +869,657 @@
         lastDecodedAt = 0;
         updateSummary();
 
-        if (clearResult) {
-            const result = document.getElementById("result");
-            result.className = "";
-            result.innerHTML = "";
+        if (clearResultDisplay) {
+            clearResult();
+        }
+    }
+
+    async function resetAll() {
+        await stopScanner();
+        clearSession(true);
+        phase = "idle";
+        processing = false;
+        setPhase("開始待ち");
+        setMessage("『チェック開始』を押し、初日の薬包を読み取ってください。");
+    }
+</script>
+</body>
+</html>
+pharmacy_mode_v2_source.txt
+
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>薬局モード</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 8px;
+            font-family: sans-serif;
+            background: #f3f4f6;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .home-link {
+            display: block;
+            margin-bottom: 6px;
+            color: #555;
+            text-align: center;
+            font-size: 13px;
+            text-decoration: none;
+        }
+
+        h1 {
+            margin: 2px 0 8px;
+            color: #198754;
+            text-align: center;
+            font-size: 22px;
+        }
+
+        .phase {
+            margin-bottom: 8px;
+            padding: 10px;
+            text-align: center;
+            background: #fff;
+            border: 2px solid #198754;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .summary-card {
+            min-width: 0;
+            padding: 8px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 1px 4px rgba(0,0,0,.12);
+        }
+
+        .summary-card h2 {
+            margin: 0 0 5px;
+            text-align: center;
+            font-size: 15px;
+        }
+
+        .summary-line {
+            overflow: hidden;
+            margin: 3px 0;
+            font-size: 12px;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        #reader {
+            display: none;
+            width: 260px;
+            height: 260px;
+            max-width: 85vw;
+            max-height: 85vw;
+            margin: 8px auto;
+            overflow: hidden;
+            border-radius: 10px;
+            background: #000;
+        }
+
+        #reader video {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover;
+        }
+
+        button {
+            width: 100%;
+            min-height: 44px;
+            margin-top: 6px;
+            padding: 9px;
+            border: 0;
+            border-radius: 9px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .start-button { background: #198754; color: #fff; }
+        .reset-button { background: #ddd; color: #222; }
+
+        #message,
+        #result {
+            margin-top: 8px;
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        #message { background: #fff3cd; color: #664d03; }
+        #result { display: none; }
+
+        #result.ok {
+            display: block;
+            color: #125d20;
+            background: #d9f5df;
+            border: 4px solid #218838;
+        }
+
+        #result.ng {
+            display: block;
+            color: #82151d;
+            background: #ffd9dc;
+            border: 4px solid #dc3545;
+        }
+
+        #result.warning {
+            display: block;
+            color: #664d03;
+            background: #fff3cd;
+            border: 4px solid #ffca2c;
+        }
+
+        .result-title {
+            margin-bottom: 8px;
+            font-size: 28px;
+        }
+
+        .comparison {
+            margin-top: 8px;
+            line-height: 1.7;
+            text-align: left;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <a class="home-link" href="index.html">← モード選択へ戻る</a>
+    <h1>薬局モード</h1>
+
+    <div id="phase" class="phase">開始待ち</div>
+
+    <div class="summary-grid">
+        <div class="summary-card">
+            <h2>初日</h2>
+            <div id="firstDate" class="summary-line">日付：未読取</div>
+            <div id="firstCount" class="summary-line">包数：0包</div>
+        </div>
+
+        <div class="summary-card">
+            <h2>最終日</h2>
+            <div id="lastDate" class="summary-line">日付：未読取</div>
+            <div id="lastCount" class="summary-line">包数：0包</div>
+        </div>
+    </div>
+
+    <button id="startButton" class="start-button" onclick="startContinuousScan()">
+        チェック開始
+    </button>
+
+    <div id="reader"></div>
+
+    <div id="message">
+        「チェック開始」を押し、初日の薬包を読み取ってください。
+    </div>
+
+    <div id="result"></div>
+
+    <button class="reset-button" onclick="resetAll()">
+        最初からやり直す
+    </button>
+</div>
+
+<script>
+    const COMMAND_FIRST_DAY_END = "MUSASHI:PHARMACY:FIRST_DAY_END";
+    const COMMAND_USAGE_END = "MUSASHI:PHARMACY:USAGE_END";
+
+    let scanner = null;
+    let phase = "idle"; // idle / first / last / completed / error
+    let firstBase = null;
+    let lastBase = null;
+    let firstCount = 0;
+    let lastCount = 0;
+    let lastDecodedText = "";
+    let lastDecodedAt = 0;
+    let processing = false;
+
+    function parseQr(qrText) {
+        const text = qrText.trim();
+
+        if (text === COMMAND_FIRST_DAY_END) {
+            return { type: "command", command: "FIRST_DAY_END" };
+        }
+
+        if (text === COMMAND_USAGE_END) {
+            return { type: "command", command: "USAGE_END" };
+        }
+
+        const items = text.split(",").map(function(item) {
+            return item.trim();
+        });
+
+        if (items.length === 4) {
+            if (items[0] === "" || items[1] === "" || items[2] === "") {
+                return null;
+            }
+
+            return {
+                type: "pharmacy",
+                typeName: "分包紙",
+                patientId: items[0],
+                date: items[1],
+                usageCode: items[2]
+            };
+        }
+
+        if (items.length === 5) {
+            if (items[0] === "" || items[1] === "" || items[2] === "") {
+                return null;
+            }
+
+            return {
+                type: "fukuyakkun",
+                typeName: "服やっくん",
+                patientId: items[0],
+                date: items[1],
+                usageCode: items[2]
+            };
+        }
+
+        return null;
+    }
+
+    function sameMedication(a, b) {
+        return (
+            a.type === b.type &&
+            a.patientId === b.patientId &&
+            a.date === b.date &&
+            a.usageCode === b.usageCode
+        );
+    }
+
+    function setMessage(text) {
+        document.getElementById("message").textContent = text;
+    }
+
+    function setPhase(text) {
+        document.getElementById("phase").textContent = text;
+    }
+
+    function updateSummary() {
+        document.getElementById("firstDate").textContent =
+            "日付：" + (firstBase ? firstBase.date : "未読取");
+
+        document.getElementById("firstCount").textContent =
+            "包数：" + firstCount + "包";
+
+        document.getElementById("lastDate").textContent =
+            "日付：" + (lastBase ? lastBase.date : "未読取");
+
+        document.getElementById("lastCount").textContent =
+            "包数：" + lastCount + "包";
+    }
+
+    function showError(title, detail) {
+        phase = "error";
+        setPhase("エラー停止");
+
+        const result = document.getElementById("result");
+        result.className = "ng";
+        result.innerHTML =
+            '<div class="result-title">' + title + "</div>" +
+            detail;
+
+        setMessage("内容を確認し、『最初からやり直す』を押してください。");
+        stopScanner();
+    }
+
+    function handleMedication(parsed) {
+        // 最終日の結果表示後、次の薬包を読んだら新しい用法を開始
+        if (phase === "completed") {
+            clearSession(true);
+            phase = "first";
+        }
+
+        // 初日の結果表示後、最終日の1包目を読んだら結果表示を消す
+        if (phase === "last" && lastBase === null) {
+            clearResult();
+        }
+
+        if (phase === "idle") {
+            phase = "first";
+        }
+
+        if (phase === "first") {
+            if (firstBase === null) {
+                firstBase = parsed;
+                firstCount = 1;
+                setPhase("初日チェック中");
+                setMessage("初日の残りを読み、最後に『初日終了QR』を読み取ってください。");
+                updateSummary();
+                return;
+            }
+
+            if (!sameMedication(firstBase, parsed)) {
+                showError(
+                    "初日照合NG",
+                    "初日チェック中に、患者ID・日付・用法・QR種類のいずれかが異なる薬包を検出しました。"
+                );
+                return;
+            }
+
+            firstCount += 1;
+            updateSummary();
+            setMessage("初日：" + firstCount + "包確認済み");
+            return;
+        }
+
+        if (phase === "last") {
+            if (lastBase === null) {
+                if (parsed.type !== firstBase.type) {
+                    showError("最終日照合NG", "初日とQR種類が異なります。");
+                    return;
+                }
+
+                if (parsed.patientId !== firstBase.patientId) {
+                    showError("最終日照合NG", "初日と患者IDが異なります。");
+                    return;
+                }
+
+                if (parsed.usageCode !== firstBase.usageCode) {
+                    showError("最終日照合NG", "初日と用法が異なります。");
+                    return;
+                }
+
+                const firstTime = Date.parse(firstBase.date);
+                const lastTime = Date.parse(parsed.date);
+
+                if (
+                    Number.isNaN(firstTime) ||
+                    Number.isNaN(lastTime) ||
+                    lastTime <= firstTime
+                ) {
+                    showError("最終日照合NG", "最終日の日付が初日より後ではありません。");
+                    return;
+                }
+
+                lastBase = parsed;
+                lastCount = 1;
+                setPhase("最終日チェック中");
+                setMessage("最終日の残りを読み、最後に『用法終了QR』を読み取ってください。");
+                updateSummary();
+                return;
+            }
+
+            if (!sameMedication(lastBase, parsed)) {
+                showError(
+                    "最終日照合NG",
+                    "最終日チェック中に、患者ID・日付・用法・QR種類のいずれかが異なる薬包を検出しました。"
+                );
+                return;
+            }
+
+            lastCount += 1;
+            updateSummary();
+            setMessage("最終日：" + lastCount + "包確認済み");
+        }
+    }
+
+    function handleCommand(command) {
+        if (command === "FIRST_DAY_END") {
+            if (phase !== "first" || firstCount === 0) {
+                showError("区切りQRエラー", "初日の薬包を1包以上読んでから使用してください。");
+                return;
+            }
+
+            showFirstDayResult();
+            phase = "last";
+            setPhase("最終日待ち");
+            setMessage("初日の確認は正常です。最終日の1包目を読み取ってください。");
+            return;
+        }
+
+        if (command === "USAGE_END") {
+            if (phase !== "last" || lastCount === 0) {
+                showError("区切りQRエラー", "最終日の薬包を1包以上読んでから使用してください。");
+                return;
+            }
+
+            showLastDayResult();
+        }
+    }
+
+    function showFirstDayResult() {
+        const result = document.getElementById("result");
+
+        result.className = "ok";
+        result.innerHTML =
+            '<div class="result-title">初日 照合OK</div>' +
+            '<div class="comparison">' +
+            "QR種類：" + firstBase.typeName + "<br>" +
+            "患者ID：******" + firstBase.patientId.slice(-4) + "<br>" +
+            "用法：" + firstBase.usageCode + "<br>" +
+            "日付：" + firstBase.date + "<br>" +
+            "確認包数：" + firstCount + "包" +
+            "</div>";
+    }
+
+    function showLastDayResult() {
+        const result = document.getElementById("result");
+
+        if (firstCount !== lastCount) {
+            phase = "error";
+            setPhase("照合NG");
+            result.className = "ng";
+            result.innerHTML =
+                '<div class="result-title">最終日 照合NG</div>' +
+                "初日と最終日の包数が一致しません。" +
+                '<div class="comparison">' +
+                "初日：" + firstBase.date + "　" + firstCount + "包<br>" +
+                "最終日：" + lastBase.date + "　" + lastCount + "包" +
+                "</div>";
+
+            setMessage("ホチ止め内容を確認してください。");
+            stopScanner();
+            return;
+        }
+
+        phase = "completed";
+        setPhase("次の用法待ち");
+        result.className = "ok";
+        result.innerHTML =
+            '<div class="result-title">最終日 照合OK</div>' +
+            '<div class="comparison">' +
+            "QR種類：" + lastBase.typeName + "<br>" +
+            "患者ID：******" + lastBase.patientId.slice(-4) + "<br>" +
+            "用法：" + lastBase.usageCode + "<br>" +
+            "日付：" + lastBase.date + "<br>" +
+            "確認包数：" + lastCount + "包<br>" +
+            "初日との包数：一致" +
+            "</div>";
+
+        setMessage("次の用法の1包目を読み取ると、結果表示を消して新しいチェックを開始します。");
+    }
+
+    async function processDecodedText(decodedText) {
+        if (processing || phase === "error") {
+            return;
+        }
+
+        const now = Date.now();
+
+        // 同じQRを置いたままにした際の連続カウントを抑止
+        if (decodedText === lastDecodedText && now - lastDecodedAt < 1500) {
+            return;
+        }
+
+        processing = true;
+        lastDecodedText = decodedText;
+        lastDecodedAt = now;
+
+        try {
+            const parsed = parseQr(decodedText);
+
+            if (parsed === null) {
+                showError("QR形式エラー", "対応していないQRコードです。");
+                return;
+            }
+
+            if (parsed.type === "command") {
+                handleCommand(parsed.command);
+            } else {
+                handleMedication(parsed);
+            }
+        } finally {
+            setTimeout(function() {
+                processing = false;
+            }, 500);
+        }
+    }
+
+    async function startContinuousScan() {
+        if (scanner !== null) {
+            return;
+        }
+
+        document.getElementById("startButton").style.display = "none";
+        document.getElementById("reader").style.display = "block";
+
+        if (phase === "idle") {
+            setPhase("初日待ち");
+            setMessage("初日の1包目を読み取ってください。");
+        }
+
+        scanner = new Html5Qrcode("reader", {
+            formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
+            experimentalFeatures: {
+                useBarCodeDetectorIfSupported: true
+            },
+            verbose: false
+        });
+
+        try {
+            await scanner.start(
+                { facingMode: "environment" },
+                {
+                    fps: 20,
+                    aspectRatio: 1.0,
+                    qrbox: function(viewfinderWidth, viewfinderHeight) {
+                        const size = Math.floor(
+                            Math.min(viewfinderWidth, viewfinderHeight) * 0.78
+                        );
+
+                        return { width: size, height: size };
+                    },
+                    videoConstraints: {
+                        facingMode: "environment",
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 }
+                    }
+                },
+                function(decodedText) {
+                    processDecodedText(decodedText);
+                },
+                function() {
+                    // 読取途中のエラーは表示しない
+                }
+            );
+
+            try {
+                const capabilities = scanner.getRunningTrackCapabilities();
+                const advancedSettings = {};
+
+                if (
+                    Array.isArray(capabilities.focusMode) &&
+                    capabilities.focusMode.includes("continuous")
+                ) {
+                    advancedSettings.focusMode = "continuous";
+                }
+
+                if (
+                    capabilities.zoom &&
+                    typeof capabilities.zoom.max === "number"
+                ) {
+                    advancedSettings.zoom = Math.min(2.5, capabilities.zoom.max);
+                }
+
+                if (Object.keys(advancedSettings).length > 0) {
+                    await scanner.applyVideoConstraints({
+                        advanced: [advancedSettings]
+                    });
+                }
+            } catch (cameraSettingError) {
+                console.log("追加カメラ設定は非対応:", cameraSettingError);
+            }
+        } catch (error) {
+            document.getElementById("reader").style.display = "none";
+            document.getElementById("startButton").style.display = "block";
+            scanner = null;
+
+            showError(
+                "カメラ起動エラー",
+                "ChromeまたはSafariで開き、カメラの使用を許可してください。"
+            );
+
+            console.error(error);
+        }
+    }
+
+    async function stopScanner() {
+        if (scanner === null) {
+            return;
+        }
+
+        try {
+            await scanner.stop();
+        } catch (error) {
+            console.log(error);
+        }
+
+        try {
+            scanner.clear();
+        } catch (error) {
+            console.log(error);
+        }
+
+        scanner = null;
+        document.getElementById("reader").style.display = "none";
+        document.getElementById("startButton").style.display = "block";
+    }
+
+    function clearResult() {
+        const result = document.getElementById("result");
+        result.className = "";
+        result.innerHTML = "";
+    }
+
+    function clearSession(clearResultDisplay) {
+        firstBase = null;
+        lastBase = null;
+        firstCount = 0;
+        lastCount = 0;
+        lastDecodedText = "";
+        lastDecodedAt = 0;
+        updateSummary();
+
+        if (clearResultDisplay) {
+            clearResult();
         }
     }
 
