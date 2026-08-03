@@ -287,6 +287,9 @@ async function startScan(targetId) {
         formatsToSupport: [
             Html5QrcodeSupportedFormats.QR_CODE
         ],
+        experimentalFeatures: {
+            useBarCodeDetectorIfSupported: true
+        },
         verbose: false
     });
 
@@ -296,11 +299,11 @@ async function startScan(targetId) {
                 facingMode: "environment"
             },
             {
-                fps: 15,
+                fps: 20,
                 aspectRatio: 1.0,
 
                 qrbox: function(viewfinderWidth, viewfinderHeight) {
-                    const size = Math.min(viewfinderWidth, viewfinderHeight) * 0.32;
+                    const size = Math.min(viewfinderWidth, viewfinderHeight) * 0.78;
                     return {
                         width: size,
                         height: size
@@ -357,31 +360,49 @@ async function startScan(targetId) {
             }
         );
 
-        // 端末がズームに対応している場合、自動で約2倍にする
+        // 対応端末では連続フォーカスとズームを適用する
         try {
             const capabilities =
                 scanner.getRunningTrackCapabilities();
 
+            const advancedSettings = {};
+
+            // 連続オートフォーカスに対応している場合
+            if (
+                Array.isArray(capabilities.focusMode) &&
+                capabilities.focusMode.includes("continuous")
+            ) {
+                advancedSettings.focusMode = "continuous";
+            }
+
+            // ズーム対応端末では2.5倍を上限に設定
             if (
                 capabilities.zoom &&
-                capabilities.zoom.max > capabilities.zoom.min
+                typeof capabilities.zoom.max === "number"
             ) {
-                const zoomValue = Math.min(
-                    2,
+                advancedSettings.zoom = Math.min(
+                    2.5,
                     capabilities.zoom.max
                 );
+            }
 
+            if (Object.keys(advancedSettings).length > 0) {
                 await scanner.applyVideoConstraints({
-                    advanced: [
-                        {
-                            zoom: zoomValue
-                        }
-                    ]
+                    advanced: [advancedSettings]
                 });
             }
-        } catch (zoomError) {
-            // ズーム非対応端末では何もしない
-            console.log("ズーム非対応:", zoomError);
+
+            console.log(
+                "カメラ能力:",
+                capabilities
+            );
+
+        } catch (cameraSettingError) {
+            // 非対応端末では通常設定のまま継続
+            console.log(
+                "追加カメラ設定は非対応:",
+                cameraSettingError
+            );
         }
 
     } catch (error) {
