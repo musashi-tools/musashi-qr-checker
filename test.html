@@ -75,7 +75,12 @@ const startBtn=document.getElementById("startBtn");
 const captureBtn=document.getElementById("captureBtn");
 const resetBtn=document.getElementById("resetBtn");
 
-let stream=null, detector=null, raf=null, detecting=false, codes=[];
+let stream=null, detector=null, detectionTimer=null, detecting=false, codes=[];
+const analysisCanvas=document.createElement("canvas");
+const analysisContext=analysisCanvas.getContext("2d",{willReadFrequently:true});
+const cropCanvas=document.createElement("canvas");
+const cropContext=cropCanvas.getContext("2d",{willReadFrequently:true});
+const DETECTION_INTERVAL_MS=300;
 let stableKey="", stableSince=0, stableResult=null;
 const STABLE_MS=700;
 
@@ -105,21 +110,216 @@ async function applySettings(){
 }
 
 function loop(){
-  async function tick(){
-    if(detector&&video.readyState>=2&&!detecting){
-      detecting=true;
-      try{
-        const found=await detector.detect(video);
-        // 同じ内容のQRでも、別の位置にあるQRは別物として扱う
-        // 以前はrawValueで重複除外していたため、
-        // 内容が同じ2枚を1個にまとめてしまっていた
-        codes = found;
-        updateStable();renderList(liveList,liveEmpty,codes,"まだQRを検出していません");drawBoxes();updateLive();
-      }catch(e){console.log(e)}finally{detecting=false}
+  stopDetectionLoop();
+
+  async function runDetection(){
+    if(
+      !detector ||
+      !stream ||
+      video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA ||
+      detecting
+    ){
+      detectionTimer=setTimeout(runDetection,DETECTION_INTERVAL_MS);
+      return;
     }
-    raf=requestAnimationFrame(tick);
+
+    detecting=true;
+
+    try{
+      codes=await detectMultipleRegions();
+      updateStable();
+      renderList(
+        liveList,
+        liveEmpty,
+        codes,
+        "まだQRを検出していません"
+      );
+      drawBoxes();
+      updateLive();
+    }catch(e){
+      console.log("複数領域の検出処理エラー:",e);
+    }finally{
+      detecting=false;
+      detectionTimer=setTimeout(runDetection,DETECTION_INTERVAL_MS);
+    }
   }
-  raf=requestAnimationFrame(tick);
+
+  detectionTimer=setTimeout(runDetection,0);
+}
+
+function stopDetectionLoop(){
+  if(detectionTimer!==null){
+    clearTimeout(detectionTimer);
+    detectionTimer=null;
+  }
+}
+
+async function detectMultipleRegions(){
+  const width=video.videoWidth;
+  const height=video.videoHeight;
+
+  if(!width||!height){
+    return [];
+  }
+
+  analysisCanvas.width=width;
+  analysisCanvas.height=height;
+  analysisContext.drawImage(video,0,0,width,height);
+
+  const regions=[
+    {name:"全体",x:0,y:0,w:width,h:height},
+    {name:"左半分",x:0,y:0,w:Math.floor(width*0.58),h:height},
+    {name:"右半分",x:Math.floor(width*0.42),y:0,w:Math.ceil(width*0.58),h:height},
+    {name:"上半分",x:0,y:0,w:width,h:Math.floor(height*0.58)},
+    {name:"下半分",x:0,y:Math.floor(height*0.42),w:width,h:Math.ceil(height*0.58)},
+    {name:"左上",x:0,y:0,w:Math.floor(width*0.58),h:Math.floor(height*0.58)},
+    {name:"右上",x:Math.floor(width*0.42),y:0,w:Math.ceil(width*0.58),h:Math.floor(height*0.58)},
+    {name:"左下",x:0,y:Math.floor(height*0.42),w:Math.floor(width*0.58),h:Math.ceil(height*0.58)},
+    {name:"右下",x:Math.floor(width*0.42),y:Math.floor(height*0.42),w:Math.ceil(width*0.58),h:Math.ceil(height*0.58)}
+  ];
+
+  const allResults=[];
+
+  for(const region of regions){
+    cropCanvas.width=region.w;
+    cropCanvas.height=region.h;
+
+    cropContext.clearRect(0,0,region.w,region.h);
+    cropContext.drawImage(
+      analysisCanvas,
+      region.x,
+      region.y,
+      region.w,
+      region.h,
+      0,
+      0,
+      region.w,
+      region.h
+    );
+
+    try{
+      const found=await detector.detect(cropCanvas);
+
+      found.forEach(function(code){
+        const localBox=code.boundingBox;
+
+        if(!localBox){
+          return;
+        }
+
+        allResults.push({
+          rawValue:code.rawValue,
+          boundingBox:{
+            x:localBox.x+region.x,
+            y:localBox.y+region.y,
+            width:localBox.width,
+            height:localBox.height
+          },
+          sourceRegion:region.name
+        });
+      });
+    }catch(error){
+      console.log(region.name+"の検出失敗:",error);
+    }
+  }
+
+  return mergeSpatialDuplicates(allResults);
+}
+
+function mergeSpatialDuplicates(results){
+  const merged=[];
+
+  results.forEach(function(candidate){
+    const candidateBox=candidate.boundingBox;
+
+    const duplicate=merged.find(function(existing){
+      if(existing.rawValue.trim()!==candidate.rawValue.trim()){
+        return false;
+      }
+
+      return boxesReferToSameQr(
+        existing.boundingBox,
+        candidateBox
+      );
+    });
+
+    if(!duplicate){
+      merged.push(candidate);
+      return;
+    }
+
+    const existingArea=
+      duplicate.boundingBox.width*
+      duplicate.boundingBox.height;
+
+    const candidateArea=
+      candidateBox.width*
+      candidateBox.height;
+
+    if(candidateArea>existingArea){
+      duplicate.boundingBox=candidateBox;
+      duplicate.sourceRegion=candidate.sourceRegion;
+    }
+  });
+
+  merged.sort(function(a,b){
+    const ay=a.boundingBox.y+a.boundingBox.height/2;
+    const by=b.boundingBox.y+b.boundingBox.height/2;
+
+    if(Math.abs(ay-by)>80){
+      return ay-by;
+    }
+
+    const ax=a.boundingBox.x+a.boundingBox.width/2;
+    const bx=b.boundingBox.x+b.boundingBox.width/2;
+    return ax-bx;
+  });
+
+  return merged;
+}
+
+function boxesReferToSameQr(a,b){
+  const intersectionLeft=Math.max(a.x,b.x);
+  const intersectionTop=Math.max(a.y,b.y);
+  const intersectionRight=Math.min(a.x+a.width,b.x+b.width);
+  const intersectionBottom=Math.min(a.y+a.height,b.y+b.height);
+
+  const intersectionWidth=
+    Math.max(0,intersectionRight-intersectionLeft);
+
+  const intersectionHeight=
+    Math.max(0,intersectionBottom-intersectionTop);
+
+  const intersectionArea=
+    intersectionWidth*intersectionHeight;
+
+  const smallerArea=Math.min(
+    a.width*a.height,
+    b.width*b.height
+  );
+
+  if(
+    smallerArea>0 &&
+    intersectionArea/smallerArea>=0.45
+  ){
+    return true;
+  }
+
+  const ax=a.x+a.width/2;
+  const ay=a.y+a.height/2;
+  const bx=b.x+b.width/2;
+  const by=b.y+b.height/2;
+
+  const distance=Math.hypot(ax-bx,ay-by);
+  const referenceSize=Math.max(
+    30,
+    Math.min(
+      Math.max(a.width,a.height),
+      Math.max(b.width,b.height)
+    )*0.55
+  );
+
+  return distance<=referenceSize;
 }
 
 function updateStable(){
@@ -184,7 +384,7 @@ function capturePhoto(){
 }
 
 async function resetAll(){
-  if(raf!==null)cancelAnimationFrame(raf);
+  stopDetectionLoop();
   if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
   video.srcObject=null;detector=null;codes=[];detecting=false;stableKey="";stableSince=0;stableResult=null;
   startBtn.disabled=false;captureBtn.disabled=true;setLive("wait","カメラ未起動","");
