@@ -85,6 +85,7 @@
             text-align: center;
             color: #777;
             font-size: 12px;
+            line-height: 1.6;
         }
     </style>
 </head>
@@ -125,15 +126,65 @@
         </span>
 
         <span class="mode-description">
-            写真からQRコードを読み取る検証
+            写真・カメラからQRコードを読み取る検証
         </span>
     </a>
 
-    <div class="version">
-        20260804 Ver_0.1.2
+    <div id="lastUpdated" class="version">
+        最終更新日時を取得中…
     </div>
 
 </div>
+
+<script>
+    async function showLastUpdated() {
+        const display =
+            document.getElementById("lastUpdated");
+
+        try {
+            const response = await fetch(
+                "https://api.github.com/repos/musashi-tools/qr-checker/commits/main",
+                {
+                    cache: "no-store"
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(
+                    "更新日時を取得できませんでした"
+                );
+            }
+
+            const data = await response.json();
+
+            const updatedAt = new Date(
+                data.commit.committer.date
+            );
+
+            display.textContent =
+                "最終更新：" +
+                updatedAt.toLocaleString(
+                    "ja-JP",
+                    {
+                        timeZone: "Asia/Tokyo",
+                        year: "numeric",
+                        month: "2-digit",
+                        day: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit"
+                    }
+                );
+
+        } catch (error) {
+            display.textContent =
+                "最終更新日時を取得できません";
+
+            console.error(error);
+        }
+    }
+
+    showLastUpdated();
+</script>
 
 </body>
 </html>
