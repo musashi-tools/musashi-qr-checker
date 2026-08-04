@@ -110,8 +110,10 @@ function loop(){
       detecting=true;
       try{
         const found=await detector.detect(video);
-        const m=new Map(); found.forEach(x=>{const v=x.rawValue.trim();if(!m.has(v))m.set(v,x)});
-        codes=[...m.values()];
+        // 同じ内容のQRでも、別の位置にあるQRは別物として扱う
+        // 以前はrawValueで重複除外していたため、
+        // 内容が同じ2枚を1個にまとめてしまっていた
+        codes = found;
         updateStable();renderList(liveList,liveEmpty,codes,"まだQRを検出していません");drawBoxes();updateLive();
       }catch(e){console.log(e)}finally{detecting=false}
     }
