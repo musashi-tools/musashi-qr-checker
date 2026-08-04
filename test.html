@@ -56,17 +56,17 @@
     }
 
     .camera {
-        position: relative;
-        width: 100%;
-        overflow: hidden;
-        border-radius: 10px;
-        line-height: 0;
+      position: relative;
+      background: #000;
+      border-radius: 10px;
+      overflow: hidden
     }
 
     video {
-        display: block;
-        width: 100%;
-        height: auto;
+      display: block;
+      width: 100%;
+      max-height: 64vh;
+      object-fit: contain
     }
 
     #overlay {
@@ -77,6 +77,48 @@
       pointer-events: none
     }
 
+    .camera-status {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      right: 8px;
+      z-index: 3;
+      padding: 10px 12px;
+      border-radius: 10px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 15px;
+      line-height: 1.35;
+      color: #fff;
+      background: rgba(0, 0, 0, .58);
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+      pointer-events: none;
+    }
+
+    .camera-status.wait {
+      background: rgba(90, 70, 0, .72)
+    }
+
+    .camera-status.ok {
+      background: rgba(20, 120, 55, .82)
+    }
+
+    .camera-status.ng {
+      background: rgba(180, 20, 35, .84)
+    }
+
+    .camera-status.warn {
+      background: rgba(165, 110, 0, .84)
+    }
+
+    .camera-status-title {
+      display: block;
+      margin-bottom: 2px;
+      font-size: 24px;
+      line-height: 1.2;
+    }
+
     .status {
       margin-top: 8px;
       padding: 12px;
@@ -85,7 +127,7 @@
       font-weight: bold;
       font-size: 18px;
       line-height: 1.45;
-      background: #eee
+      background: #eee;
     }
 
     .status.wait {
@@ -205,8 +247,14 @@
     <p class="desc">ホチ止め前に複数QRを同時に映し、検出数・枠・照合結果をリアルタイム表示します。撮影は検出数に関係なく可能です。</p>
 
     <div class="card">
-      <div class="camera"><video id="video" playsinline muted></video><canvas id="overlay"></canvas></div>
-      <div id="liveStatus" class="status wait">カメラ未起動</div>
+      <div class="camera">
+        <video id="video" playsinline muted></video>
+        <canvas id="overlay"></canvas>
+
+        <div id="liveStatus" class="camera-status wait">
+          <span class="camera-status-title">カメラ未起動</span>
+        </div>
+      </div>
       <div class="buttons">
         <button id="startBtn" class="start">カメラ起動</button>
         <button id="captureBtn" class="capture" disabled>撮影する</button>
@@ -521,7 +569,14 @@
       return { cls: "ng", title: "照合NG", detail: "患者ID：" + (id ? "一致" : "不一致") + "　服用日：" + (date ? "一致" : "不一致") + "　用法：" + (usage ? "一致" : "不一致") };
     }
 
-    function setLive(cls, title, detail) { liveStatus.className = "status " + cls; liveStatus.innerHTML = '<span class="title">' + title + "</span>" + detail }
+    function setLive(cls, title, detail) {
+      liveStatus.className = "camera-status " + cls;
+      liveStatus.innerHTML =
+        '<span class="camera-status-title">' +
+        title +
+        "</span>" +
+        detail;
+    }
     function updateLive() {
       if (!stream) { setLive("wait", "カメラ未起動", ""); return }
       if (stableResult === null) {
