@@ -1,398 +1,576 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>リアルタイムQR照合テスト</title>
-<style>
-*{box-sizing:border-box}body{margin:0;padding:10px;font-family:sans-serif;background:#f3f4f6;color:#222}
-.container{width:100%;max-width:680px;margin:auto}.home-link{display:block;text-align:center;color:#555;font-size:13px;text-decoration:none;margin-bottom:6px}
-h1{text-align:center;font-size:22px;margin:4px 0 8px}.desc{text-align:center;color:#555;font-size:13px;line-height:1.5;margin:0 0 10px}
-.card{background:#fff;border-radius:12px;padding:10px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
-.camera{position:relative;background:#000;border-radius:10px;overflow:hidden}video{display:block;width:100%;max-height:64vh;object-fit:contain}
-#overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
-.status{margin-top:8px;padding:12px;border-radius:9px;text-align:center;font-weight:bold;font-size:18px;line-height:1.45;background:#eee}
-.status.wait{color:#664d03;background:#fff3cd}.status.ok{color:#125d20;background:#d9f5df;border:4px solid #218838}
-.status.ng{color:#82151d;background:#ffd9dc;border:4px solid #dc3545}.status.warn{color:#664d03;background:#fff3cd;border:4px solid #ffca2c}
-.title{display:block;font-size:26px;margin-bottom:4px}.buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
-button{width:100%;min-height:46px;border:0;border-radius:9px;font-size:16px;font-weight:bold;cursor:pointer}
-.start{background:#6f42c1;color:#fff}.capture{background:#1565c0;color:#fff}.reset{background:#ddd;color:#222}
-button:disabled{opacity:.45}.item{margin-top:6px;padding:8px;background:#f7f7f7;border-left:5px solid #6f42c1;border-radius:7px}
-.item b{display:block;margin-bottom:4px}.value{font-family:monospace;font-size:12px;overflow-wrap:anywhere}.empty,.note{color:#666;font-size:12px;line-height:1.5}
-#captured{display:none}#shot{display:block;width:100%;max-height:62vh;object-fit:contain;background:#111;border-radius:8px}#captureCanvas{display:none}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>リアルタイムQR照合テスト</title>
+  <style>
+    * {
+      box-sizing: border-box
+    }
+
+    body {
+      margin: 0;
+      padding: 10px;
+      font-family: sans-serif;
+      background: #f3f4f6;
+      color: #222
+    }
+
+    .container {
+      width: 100%;
+      max-width: 680px;
+      margin: auto
+    }
+
+    .home-link {
+      display: block;
+      text-align: center;
+      color: #555;
+      font-size: 13px;
+      text-decoration: none;
+      margin-bottom: 6px
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 22px;
+      margin: 4px 0 8px
+    }
+
+    .desc {
+      text-align: center;
+      color: #555;
+      font-size: 13px;
+      line-height: 1.5;
+      margin: 0 0 10px
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 10px;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, .1)
+    }
+
+    .camera {
+        position: relative;
+        width: 100%;
+        overflow: hidden;
+        border-radius: 10px;
+        line-height: 0;
+    }
+
+    video {
+        display: block;
+        width: 100%;
+        height: auto;
+    }
+
+    #overlay {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none
+    }
+
+    .status {
+      margin-top: 8px;
+      padding: 12px;
+      border-radius: 9px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 18px;
+      line-height: 1.45;
+      background: #eee
+    }
+
+    .status.wait {
+      color: #664d03;
+      background: #fff3cd
+    }
+
+    .status.ok {
+      color: #125d20;
+      background: #d9f5df;
+      border: 4px solid #218838
+    }
+
+    .status.ng {
+      color: #82151d;
+      background: #ffd9dc;
+      border: 4px solid #dc3545
+    }
+
+    .status.warn {
+      color: #664d03;
+      background: #fff3cd;
+      border: 4px solid #ffca2c
+    }
+
+    .title {
+      display: block;
+      font-size: 26px;
+      margin-bottom: 4px
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 8px
+    }
+
+    button {
+      width: 100%;
+      min-height: 46px;
+      border: 0;
+      border-radius: 9px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer
+    }
+
+    .start {
+      background: #6f42c1;
+      color: #fff
+    }
+
+    .capture {
+      background: #1565c0;
+      color: #fff
+    }
+
+    .reset {
+      background: #ddd;
+      color: #222
+    }
+
+    button:disabled {
+      opacity: .45
+    }
+
+    .item {
+      margin-top: 6px;
+      padding: 8px;
+      background: #f7f7f7;
+      border-left: 5px solid #6f42c1;
+      border-radius: 7px
+    }
+
+    .item b {
+      display: block;
+      margin-bottom: 4px
+    }
+
+    .value {
+      font-family: monospace;
+      font-size: 12px;
+      overflow-wrap: anywhere
+    }
+
+    .empty,
+    .note {
+      color: #666;
+      font-size: 12px;
+      line-height: 1.5
+    }
+
+    #captured {
+      display: none
+    }
+
+    #shot {
+      display: block;
+      width: 100%;
+      max-height: 62vh;
+      object-fit: contain;
+      background: #111;
+      border-radius: 8px
+    }
+
+    #captureCanvas {
+      display: none
+    }
+  </style>
 </head>
+
 <body>
-<div class="container">
-<a class="home-link" href="index.html">← モード選択へ戻る</a>
-<h1>リアルタイムQR照合テスト</h1>
-<p class="desc">ホチ止め前に複数QRを同時に映し、検出数・枠・照合結果をリアルタイム表示します。撮影は検出数に関係なく可能です。</p>
+  <div class="container">
+    <a class="home-link" href="index.html">← モード選択へ戻る</a>
+    <h1>リアルタイムQR照合テスト</h1>
+    <p class="desc">ホチ止め前に複数QRを同時に映し、検出数・枠・照合結果をリアルタイム表示します。撮影は検出数に関係なく可能です。</p>
 
-<div class="card">
-  <div class="camera"><video id="video" playsinline muted></video><canvas id="overlay"></canvas></div>
-  <div id="liveStatus" class="status wait">カメラ未起動</div>
-  <div class="buttons">
-    <button id="startBtn" class="start">カメラ起動</button>
-    <button id="captureBtn" class="capture" disabled>撮影する</button>
+    <div class="card">
+      <div class="camera"><video id="video" playsinline muted></video><canvas id="overlay"></canvas></div>
+      <div id="liveStatus" class="status wait">カメラ未起動</div>
+      <div class="buttons">
+        <button id="startBtn" class="start">カメラ起動</button>
+        <button id="captureBtn" class="capture" disabled>撮影する</button>
+      </div>
+      <p class="note">0個・1個・3個以上でも撮影できます。その場合は自動照合せず、目視確認へ回します。</p>
+    </div>
+
+    <div class="card">
+      <b>現在検出中のQR</b>
+      <div id="liveEmpty" class="empty">まだQRを検出していません</div>
+      <div id="liveList"></div>
+    </div>
+
+    <div id="captured" class="card">
+      <b>撮影した写真</b>
+      <img id="shot" alt="撮影画像">
+      <div id="capturedStatus" class="status"></div>
+      <div style="margin-top:10px"><b>撮影時に検出していたQR</b></div>
+      <div id="capturedEmpty" class="empty"></div>
+      <div id="capturedList"></div>
+    </div>
+
+    <button id="resetBtn" class="reset">最初からやり直す</button>
+    <canvas id="captureCanvas"></canvas>
   </div>
-  <p class="note">0個・1個・3個以上でも撮影できます。その場合は自動照合せず、目視確認へ回します。</p>
-</div>
 
-<div class="card">
-  <b>現在検出中のQR</b>
-  <div id="liveEmpty" class="empty">まだQRを検出していません</div>
-  <div id="liveList"></div>
-</div>
+  <script>
+    const video = document.getElementById("video");
+    const overlay = document.getElementById("overlay");
+    const octx = overlay.getContext("2d");
+    const liveStatus = document.getElementById("liveStatus");
+    const liveList = document.getElementById("liveList");
+    const liveEmpty = document.getElementById("liveEmpty");
+    const captured = document.getElementById("captured");
+    const shot = document.getElementById("shot");
+    const capturedStatus = document.getElementById("capturedStatus");
+    const capturedList = document.getElementById("capturedList");
+    const capturedEmpty = document.getElementById("capturedEmpty");
+    const canvas = document.getElementById("captureCanvas");
+    const cctx = canvas.getContext("2d");
+    const startBtn = document.getElementById("startBtn");
+    const captureBtn = document.getElementById("captureBtn");
+    const resetBtn = document.getElementById("resetBtn");
 
-<div id="captured" class="card">
-  <b>撮影した写真</b>
-  <img id="shot" alt="撮影画像">
-  <div id="capturedStatus" class="status"></div>
-  <div style="margin-top:10px"><b>撮影時に検出していたQR</b></div>
-  <div id="capturedEmpty" class="empty"></div>
-  <div id="capturedList"></div>
-</div>
+    let stream = null, detector = null, detectionTimer = null, detecting = false, codes = [];
+    const analysisCanvas = document.createElement("canvas");
+    const analysisContext = analysisCanvas.getContext("2d", { willReadFrequently: true });
+    const cropCanvas = document.createElement("canvas");
+    const cropContext = cropCanvas.getContext("2d", { willReadFrequently: true });
+    const DETECTION_INTERVAL_MS = 300;
+    let stableKey = "", stableSince = 0, stableResult = null;
+    const STABLE_MS = 700;
 
-<button id="resetBtn" class="reset">最初からやり直す</button>
-<canvas id="captureCanvas"></canvas>
-</div>
+    startBtn.onclick = startCamera;
+    captureBtn.onclick = capturePhoto;
+    resetBtn.onclick = resetAll;
 
-<script>
-const video=document.getElementById("video");
-const overlay=document.getElementById("overlay");
-const octx=overlay.getContext("2d");
-const liveStatus=document.getElementById("liveStatus");
-const liveList=document.getElementById("liveList");
-const liveEmpty=document.getElementById("liveEmpty");
-const captured=document.getElementById("captured");
-const shot=document.getElementById("shot");
-const capturedStatus=document.getElementById("capturedStatus");
-const capturedList=document.getElementById("capturedList");
-const capturedEmpty=document.getElementById("capturedEmpty");
-const canvas=document.getElementById("captureCanvas");
-const cctx=canvas.getContext("2d");
-const startBtn=document.getElementById("startBtn");
-const captureBtn=document.getElementById("captureBtn");
-const resetBtn=document.getElementById("resetBtn");
-
-let stream=null, detector=null, detectionTimer=null, detecting=false, codes=[];
-const analysisCanvas=document.createElement("canvas");
-const analysisContext=analysisCanvas.getContext("2d",{willReadFrequently:true});
-const cropCanvas=document.createElement("canvas");
-const cropContext=cropCanvas.getContext("2d",{willReadFrequently:true});
-const DETECTION_INTERVAL_MS=300;
-let stableKey="", stableSince=0, stableResult=null;
-const STABLE_MS=700;
-
-startBtn.onclick=startCamera;
-captureBtn.onclick=capturePhoto;
-resetBtn.onclick=resetAll;
-
-async function startCamera(){
-  try{
-    if(!("BarcodeDetector" in window)) throw new Error("このブラウザは複数QR検出に対応していません。AndroidのChromeで試してください。");
-    const formats=await BarcodeDetector.getSupportedFormats();
-    if(!formats.includes("qr_code")) throw new Error("この端末ではQRコード検出に対応していません。");
-    detector=new BarcodeDetector({formats:["qr_code"]});
-    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080}},audio:false});
-    video.srcObject=stream; await video.play(); await applySettings();
-    startBtn.disabled=true; captureBtn.disabled=false; loop();
-  }catch(e){console.error(e);setLive("warn","起動エラー",e.message||"カメラを起動できませんでした。")}
-}
-
-async function applySettings(){
-  try{
-    const track=stream.getVideoTracks()[0], caps=track.getCapabilities?track.getCapabilities():{}, adv={};
-    if(Array.isArray(caps.focusMode)&&caps.focusMode.includes("continuous")) adv.focusMode="continuous";
-    if(caps.zoom&&typeof caps.zoom.max==="number") adv.zoom=Math.min(2,caps.zoom.max);
-    if(Object.keys(adv).length) await track.applyConstraints({advanced:[adv]});
-  }catch(e){console.log("追加設定非対応",e)}
-}
-
-function loop(){
-  stopDetectionLoop();
-
-  async function runDetection(){
-    if(
-      !detector ||
-      !stream ||
-      video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA ||
-      detecting
-    ){
-      detectionTimer=setTimeout(runDetection,DETECTION_INTERVAL_MS);
-      return;
+    async function startCamera() {
+      try {
+        if (!("BarcodeDetector" in window)) throw new Error("このブラウザは複数QR検出に対応していません。AndroidのChromeで試してください。");
+        const formats = await BarcodeDetector.getSupportedFormats();
+        if (!formats.includes("qr_code")) throw new Error("この端末ではQRコード検出に対応していません。");
+        detector = new BarcodeDetector({ formats: ["qr_code"] });
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false });
+        video.srcObject = stream; await video.play(); await applySettings();
+        startBtn.disabled = true; captureBtn.disabled = false; loop();
+      } catch (e) { console.error(e); setLive("warn", "起動エラー", e.message || "カメラを起動できませんでした。") }
     }
 
-    detecting=true;
-
-    try{
-      codes=await detectMultipleRegions();
-      updateStable();
-      renderList(
-        liveList,
-        liveEmpty,
-        codes,
-        "まだQRを検出していません"
-      );
-      drawBoxes();
-      updateLive();
-    }catch(e){
-      console.log("複数領域の検出処理エラー:",e);
-    }finally{
-      detecting=false;
-      detectionTimer=setTimeout(runDetection,DETECTION_INTERVAL_MS);
+    async function applySettings() {
+      try {
+        const track = stream.getVideoTracks()[0], caps = track.getCapabilities ? track.getCapabilities() : {}, adv = {};
+        if (Array.isArray(caps.focusMode) && caps.focusMode.includes("continuous")) adv.focusMode = "continuous";
+        if (caps.zoom && typeof caps.zoom.max === "number") adv.zoom = Math.min(2, caps.zoom.max);
+        if (Object.keys(adv).length) await track.applyConstraints({ advanced: [adv] });
+      } catch (e) { console.log("追加設定非対応", e) }
     }
-  }
 
-  detectionTimer=setTimeout(runDetection,0);
-}
+    function loop() {
+      stopDetectionLoop();
 
-function stopDetectionLoop(){
-  if(detectionTimer!==null){
-    clearTimeout(detectionTimer);
-    detectionTimer=null;
-  }
-}
-
-async function detectMultipleRegions(){
-  const width=video.videoWidth;
-  const height=video.videoHeight;
-
-  if(!width||!height){
-    return [];
-  }
-
-  analysisCanvas.width=width;
-  analysisCanvas.height=height;
-  analysisContext.drawImage(video,0,0,width,height);
-
-  const regions=[
-    {name:"全体",x:0,y:0,w:width,h:height},
-    {name:"左半分",x:0,y:0,w:Math.floor(width*0.58),h:height},
-    {name:"右半分",x:Math.floor(width*0.42),y:0,w:Math.ceil(width*0.58),h:height},
-    {name:"上半分",x:0,y:0,w:width,h:Math.floor(height*0.58)},
-    {name:"下半分",x:0,y:Math.floor(height*0.42),w:width,h:Math.ceil(height*0.58)},
-    {name:"左上",x:0,y:0,w:Math.floor(width*0.58),h:Math.floor(height*0.58)},
-    {name:"右上",x:Math.floor(width*0.42),y:0,w:Math.ceil(width*0.58),h:Math.floor(height*0.58)},
-    {name:"左下",x:0,y:Math.floor(height*0.42),w:Math.floor(width*0.58),h:Math.ceil(height*0.58)},
-    {name:"右下",x:Math.floor(width*0.42),y:Math.floor(height*0.42),w:Math.ceil(width*0.58),h:Math.ceil(height*0.58)}
-  ];
-
-  const allResults=[];
-
-  for(const region of regions){
-    cropCanvas.width=region.w;
-    cropCanvas.height=region.h;
-
-    cropContext.clearRect(0,0,region.w,region.h);
-    cropContext.drawImage(
-      analysisCanvas,
-      region.x,
-      region.y,
-      region.w,
-      region.h,
-      0,
-      0,
-      region.w,
-      region.h
-    );
-
-    try{
-      const found=await detector.detect(cropCanvas);
-
-      found.forEach(function(code){
-        const localBox=code.boundingBox;
-
-        if(!localBox){
+      async function runDetection() {
+        if (
+          !detector ||
+          !stream ||
+          video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA ||
+          detecting
+        ) {
+          detectionTimer = setTimeout(runDetection, DETECTION_INTERVAL_MS);
           return;
         }
 
-        allResults.push({
-          rawValue:code.rawValue,
-          boundingBox:{
-            x:localBox.x+region.x,
-            y:localBox.y+region.y,
-            width:localBox.width,
-            height:localBox.height
-          },
-          sourceRegion:region.name
-        });
-      });
-    }catch(error){
-      console.log(region.name+"の検出失敗:",error);
-    }
-  }
+        detecting = true;
 
-  return mergeSpatialDuplicates(allResults);
-}
-
-function mergeSpatialDuplicates(results){
-  const merged=[];
-
-  results.forEach(function(candidate){
-    const candidateBox=candidate.boundingBox;
-
-    const duplicate=merged.find(function(existing){
-      if(existing.rawValue.trim()!==candidate.rawValue.trim()){
-        return false;
+        try {
+          codes = await detectMultipleRegions();
+          updateStable();
+          renderList(
+            liveList,
+            liveEmpty,
+            codes,
+            "まだQRを検出していません"
+          );
+          drawBoxes();
+          updateLive();
+        } catch (e) {
+          console.log("複数領域の検出処理エラー:", e);
+        } finally {
+          detecting = false;
+          detectionTimer = setTimeout(runDetection, DETECTION_INTERVAL_MS);
+        }
       }
 
-      return boxesReferToSameQr(
-        existing.boundingBox,
-        candidateBox
+      detectionTimer = setTimeout(runDetection, 0);
+    }
+
+    function stopDetectionLoop() {
+      if (detectionTimer !== null) {
+        clearTimeout(detectionTimer);
+        detectionTimer = null;
+      }
+    }
+
+    async function detectMultipleRegions() {
+      const width = video.videoWidth;
+      const height = video.videoHeight;
+
+      if (!width || !height) {
+        return [];
+      }
+
+      analysisCanvas.width = width;
+      analysisCanvas.height = height;
+      analysisContext.drawImage(video, 0, 0, width, height);
+
+      const regions = [
+        { name: "全体", x: 0, y: 0, w: width, h: height },
+        { name: "左半分", x: 0, y: 0, w: Math.floor(width * 0.58), h: height },
+        { name: "右半分", x: Math.floor(width * 0.42), y: 0, w: Math.ceil(width * 0.58), h: height },
+        { name: "上半分", x: 0, y: 0, w: width, h: Math.floor(height * 0.58) },
+        { name: "下半分", x: 0, y: Math.floor(height * 0.42), w: width, h: Math.ceil(height * 0.58) },
+        { name: "左上", x: 0, y: 0, w: Math.floor(width * 0.58), h: Math.floor(height * 0.58) },
+        { name: "右上", x: Math.floor(width * 0.42), y: 0, w: Math.ceil(width * 0.58), h: Math.floor(height * 0.58) },
+        { name: "左下", x: 0, y: Math.floor(height * 0.42), w: Math.floor(width * 0.58), h: Math.ceil(height * 0.58) },
+        { name: "右下", x: Math.floor(width * 0.42), y: Math.floor(height * 0.42), w: Math.ceil(width * 0.58), h: Math.ceil(height * 0.58) }
+      ];
+
+      const allResults = [];
+
+      for (const region of regions) {
+        cropCanvas.width = region.w;
+        cropCanvas.height = region.h;
+
+        cropContext.clearRect(0, 0, region.w, region.h);
+        cropContext.drawImage(
+          analysisCanvas,
+          region.x,
+          region.y,
+          region.w,
+          region.h,
+          0,
+          0,
+          region.w,
+          region.h
+        );
+
+        try {
+          const found = await detector.detect(cropCanvas);
+
+          found.forEach(function (code) {
+            const localBox = code.boundingBox;
+
+            if (!localBox) {
+              return;
+            }
+
+            allResults.push({
+              rawValue: code.rawValue,
+              boundingBox: {
+                x: localBox.x + region.x,
+                y: localBox.y + region.y,
+                width: localBox.width,
+                height: localBox.height
+              },
+              sourceRegion: region.name
+            });
+          });
+        } catch (error) {
+          console.log(region.name + "の検出失敗:", error);
+        }
+      }
+
+      return mergeSpatialDuplicates(allResults);
+    }
+
+    function mergeSpatialDuplicates(results) {
+      const merged = [];
+
+      results.forEach(function (candidate) {
+        const candidateBox = candidate.boundingBox;
+
+        const duplicate = merged.find(function (existing) {
+          if (existing.rawValue.trim() !== candidate.rawValue.trim()) {
+            return false;
+          }
+
+          return boxesReferToSameQr(
+            existing.boundingBox,
+            candidateBox
+          );
+        });
+
+        if (!duplicate) {
+          merged.push(candidate);
+          return;
+        }
+
+        const existingArea =
+          duplicate.boundingBox.width *
+          duplicate.boundingBox.height;
+
+        const candidateArea =
+          candidateBox.width *
+          candidateBox.height;
+
+        if (candidateArea > existingArea) {
+          duplicate.boundingBox = candidateBox;
+          duplicate.sourceRegion = candidate.sourceRegion;
+        }
+      });
+
+      merged.sort(function (a, b) {
+        const ay = a.boundingBox.y + a.boundingBox.height / 2;
+        const by = b.boundingBox.y + b.boundingBox.height / 2;
+
+        if (Math.abs(ay - by) > 80) {
+          return ay - by;
+        }
+
+        const ax = a.boundingBox.x + a.boundingBox.width / 2;
+        const bx = b.boundingBox.x + b.boundingBox.width / 2;
+        return ax - bx;
+      });
+
+      return merged;
+    }
+
+    function boxesReferToSameQr(a, b) {
+      const intersectionLeft = Math.max(a.x, b.x);
+      const intersectionTop = Math.max(a.y, b.y);
+      const intersectionRight = Math.min(a.x + a.width, b.x + b.width);
+      const intersectionBottom = Math.min(a.y + a.height, b.y + b.height);
+
+      const intersectionWidth =
+        Math.max(0, intersectionRight - intersectionLeft);
+
+      const intersectionHeight =
+        Math.max(0, intersectionBottom - intersectionTop);
+
+      const intersectionArea =
+        intersectionWidth * intersectionHeight;
+
+      const smallerArea = Math.min(
+        a.width * a.height,
+        b.width * b.height
       );
-    });
 
-    if(!duplicate){
-      merged.push(candidate);
-      return;
+      if (
+        smallerArea > 0 &&
+        intersectionArea / smallerArea >= 0.45
+      ) {
+        return true;
+      }
+
+      const ax = a.x + a.width / 2;
+      const ay = a.y + a.height / 2;
+      const bx = b.x + b.width / 2;
+      const by = b.y + b.height / 2;
+
+      const distance = Math.hypot(ax - bx, ay - by);
+      const referenceSize = Math.max(
+        30,
+        Math.min(
+          Math.max(a.width, a.height),
+          Math.max(b.width, b.height)
+        ) * 0.55
+      );
+
+      return distance <= referenceSize;
     }
 
-    const existingArea=
-      duplicate.boundingBox.width*
-      duplicate.boundingBox.height;
-
-    const candidateArea=
-      candidateBox.width*
-      candidateBox.height;
-
-    if(candidateArea>existingArea){
-      duplicate.boundingBox=candidateBox;
-      duplicate.sourceRegion=candidate.sourceRegion;
-    }
-  });
-
-  merged.sort(function(a,b){
-    const ay=a.boundingBox.y+a.boundingBox.height/2;
-    const by=b.boundingBox.y+b.boundingBox.height/2;
-
-    if(Math.abs(ay-by)>80){
-      return ay-by;
+    function updateStable() {
+      const key = codes.map(x => x.rawValue.trim()).sort().join("||"), now = Date.now();
+      if (key !== stableKey) { stableKey = key; stableSince = now; stableResult = null; return }
+      if (stableResult === null && now - stableSince >= STABLE_MS) stableResult = evaluate(codes);
     }
 
-    const ax=a.boundingBox.x+a.boundingBox.width/2;
-    const bx=b.boundingBox.x+b.boundingBox.width/2;
-    return ax-bx;
-  });
+    function parse(raw) {
+      const a = raw.trim().split(",").map(x => x.trim());
+      if (a.length === 4 && a[0] && a[1] && a[2]) return { type: "pharmacy", name: "分包紙", id: a[0], date: a[1], usage: a[2] };
+      if (a.length === 5 && a[0] && a[1] && a[2]) return { type: "fukuyakkun", name: "服やっくん", id: a[0], date: a[1], usage: a[2] };
+      return null;
+    }
 
-  return merged;
-}
+    function evaluate(list) {
+      if (list.length !== 2) return { cls: "wait", title: "QR検出数：" + list.length + "個", detail: "2個検出時のみ自動照合します。撮影は可能です。" };
+      const a = parse(list[0].rawValue), b = parse(list[1].rawValue);
+      if (!a || !b) return { cls: "warn", title: "自動照合できません", detail: "対応していないQR形式が含まれています。" };
+      const sameType = a.type === b.type, id = a.id === b.id, date = a.date === b.date, usage = a.usage === b.usage;
+      if (sameType && id && date && usage) return { cls: "ok", title: "照合OK", detail: "患者ID：一致　服用日：一致　用法：一致" };
+      if (!sameType && date && usage) return { cls: "warn", title: "自動照合できません", detail: "QR種類が異なるため患者IDは照合不能です。服用日・用法は一致。" };
+      return { cls: "ng", title: "照合NG", detail: "患者ID：" + (id ? "一致" : "不一致") + "　服用日：" + (date ? "一致" : "不一致") + "　用法：" + (usage ? "一致" : "不一致") };
+    }
 
-function boxesReferToSameQr(a,b){
-  const intersectionLeft=Math.max(a.x,b.x);
-  const intersectionTop=Math.max(a.y,b.y);
-  const intersectionRight=Math.min(a.x+a.width,b.x+b.width);
-  const intersectionBottom=Math.min(a.y+a.height,b.y+b.height);
+    function setLive(cls, title, detail) { liveStatus.className = "status " + cls; liveStatus.innerHTML = '<span class="title">' + title + "</span>" + detail }
+    function updateLive() {
+      if (!stream) { setLive("wait", "カメラ未起動", ""); return }
+      if (stableResult === null) {
+        if (codes.length === 2) setLive("wait", "照合中…", "QR検出数：2個");
+        else setLive("wait", "QR検出数：" + codes.length + "個", "撮影は可能です");
+      } else setLive(stableResult.cls, stableResult.title, stableResult.detail);
+    }
 
-  const intersectionWidth=
-    Math.max(0,intersectionRight-intersectionLeft);
+    function renderList(box, empty, list, msg) {
+      box.innerHTML = "";
+      if (!list.length) { empty.textContent = msg; empty.style.display = "block"; return }
+      empty.style.display = "none";
+      list.forEach((x, i) => { const d = document.createElement("div"); d.className = "item"; d.innerHTML = "<b>QR " + (i + 1) + '</b><div class="value"></div>'; d.querySelector(".value").textContent = x.rawValue; box.appendChild(d) });
+    }
 
-  const intersectionHeight=
-    Math.max(0,intersectionBottom-intersectionTop);
+    function drawBoxes() {
+      const r = video.getBoundingClientRect(); overlay.width = Math.max(1, Math.round(r.width)); overlay.height = Math.max(1, Math.round(r.height));
+      octx.clearRect(0, 0, overlay.width, overlay.height); if (!video.videoWidth || !video.videoHeight) return;
+      const sx = overlay.width / video.videoWidth, sy = overlay.height / video.videoHeight;
+      octx.lineWidth = 4; octx.font = "bold 18px sans-serif";
+      codes.forEach((x, i) => {
+        if (!x.boundingBox) return; const b = x.boundingBox, c = stableResult && stableResult.cls === "ng" ? "#ff3333" : "#00ff66";
+        octx.strokeStyle = c; octx.fillStyle = c; octx.strokeRect(b.x * sx, b.y * sy, b.width * sx, b.height * sy); octx.fillText("QR " + (i + 1), b.x * sx, Math.max(20, b.y * sy - 6));
+      });
+    }
 
-  const intersectionArea=
-    intersectionWidth*intersectionHeight;
+    function capturePhoto() {
+      if (!stream || !video.videoWidth) return;
+      canvas.width = video.videoWidth; canvas.height = video.videoHeight; cctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      shot.src = canvas.toDataURL("image/jpeg", .92);
+      const snap = codes.map(x => ({ rawValue: x.rawValue }));
+      const result = evaluate(snap);
+      captured.style.display = "block";
+      capturedStatus.className = "status " + result.cls;
+      capturedStatus.innerHTML = '<span class="title">' + result.title + "</span>" + result.detail;
+      renderList(capturedList, capturedEmpty, snap, "撮影時に検出できたQRはありません。目視確認へ回してください。");
+    }
 
-  const smallerArea=Math.min(
-    a.width*a.height,
-    b.width*b.height
-  );
-
-  if(
-    smallerArea>0 &&
-    intersectionArea/smallerArea>=0.45
-  ){
-    return true;
-  }
-
-  const ax=a.x+a.width/2;
-  const ay=a.y+a.height/2;
-  const bx=b.x+b.width/2;
-  const by=b.y+b.height/2;
-
-  const distance=Math.hypot(ax-bx,ay-by);
-  const referenceSize=Math.max(
-    30,
-    Math.min(
-      Math.max(a.width,a.height),
-      Math.max(b.width,b.height)
-    )*0.55
-  );
-
-  return distance<=referenceSize;
-}
-
-function updateStable(){
-  const key=codes.map(x=>x.rawValue.trim()).sort().join("||"), now=Date.now();
-  if(key!==stableKey){stableKey=key;stableSince=now;stableResult=null;return}
-  if(stableResult===null&&now-stableSince>=STABLE_MS) stableResult=evaluate(codes);
-}
-
-function parse(raw){
-  const a=raw.trim().split(",").map(x=>x.trim());
-  if(a.length===4&&a[0]&&a[1]&&a[2]) return {type:"pharmacy",name:"分包紙",id:a[0],date:a[1],usage:a[2]};
-  if(a.length===5&&a[0]&&a[1]&&a[2]) return {type:"fukuyakkun",name:"服やっくん",id:a[0],date:a[1],usage:a[2]};
-  return null;
-}
-
-function evaluate(list){
-  if(list.length!==2) return {cls:"wait",title:"QR検出数："+list.length+"個",detail:"2個検出時のみ自動照合します。撮影は可能です。"};
-  const a=parse(list[0].rawValue),b=parse(list[1].rawValue);
-  if(!a||!b) return {cls:"warn",title:"自動照合できません",detail:"対応していないQR形式が含まれています。"};
-  const sameType=a.type===b.type, id=a.id===b.id, date=a.date===b.date, usage=a.usage===b.usage;
-  if(sameType&&id&&date&&usage) return {cls:"ok",title:"照合OK",detail:"患者ID：一致　服用日：一致　用法：一致"};
-  if(!sameType&&date&&usage) return {cls:"warn",title:"自動照合できません",detail:"QR種類が異なるため患者IDは照合不能です。服用日・用法は一致。"};
-  return {cls:"ng",title:"照合NG",detail:"患者ID："+(id?"一致":"不一致")+"　服用日："+(date?"一致":"不一致")+"　用法："+(usage?"一致":"不一致")};
-}
-
-function setLive(cls,title,detail){liveStatus.className="status "+cls;liveStatus.innerHTML='<span class="title">'+title+"</span>"+detail}
-function updateLive(){
-  if(!stream){setLive("wait","カメラ未起動","");return}
-  if(stableResult===null){
-    if(codes.length===2)setLive("wait","照合中…","QR検出数：2個");
-    else setLive("wait","QR検出数："+codes.length+"個","撮影は可能です");
-  }else setLive(stableResult.cls,stableResult.title,stableResult.detail);
-}
-
-function renderList(box,empty,list,msg){
-  box.innerHTML="";
-  if(!list.length){empty.textContent=msg;empty.style.display="block";return}
-  empty.style.display="none";
-  list.forEach((x,i)=>{const d=document.createElement("div");d.className="item";d.innerHTML="<b>QR "+(i+1)+'</b><div class="value"></div>';d.querySelector(".value").textContent=x.rawValue;box.appendChild(d)});
-}
-
-function drawBoxes(){
-  const r=video.getBoundingClientRect();overlay.width=Math.max(1,Math.round(r.width));overlay.height=Math.max(1,Math.round(r.height));
-  octx.clearRect(0,0,overlay.width,overlay.height);if(!video.videoWidth||!video.videoHeight)return;
-  const sx=overlay.width/video.videoWidth,sy=overlay.height/video.videoHeight;
-  octx.lineWidth=4;octx.font="bold 18px sans-serif";
-  codes.forEach((x,i)=>{if(!x.boundingBox)return;const b=x.boundingBox,c=stableResult&&stableResult.cls==="ng"?"#ff3333":"#00ff66";
-    octx.strokeStyle=c;octx.fillStyle=c;octx.strokeRect(b.x*sx,b.y*sy,b.width*sx,b.height*sy);octx.fillText("QR "+(i+1),b.x*sx,Math.max(20,b.y*sy-6));
-  });
-}
-
-function capturePhoto(){
-  if(!stream||!video.videoWidth)return;
-  canvas.width=video.videoWidth;canvas.height=video.videoHeight;cctx.drawImage(video,0,0,canvas.width,canvas.height);
-  shot.src=canvas.toDataURL("image/jpeg",.92);
-  const snap=codes.map(x=>({rawValue:x.rawValue}));
-  const result=evaluate(snap);
-  captured.style.display="block";
-  capturedStatus.className="status "+result.cls;
-  capturedStatus.innerHTML='<span class="title">'+result.title+"</span>"+result.detail;
-  renderList(capturedList,capturedEmpty,snap,"撮影時に検出できたQRはありません。目視確認へ回してください。");
-}
-
-async function resetAll(){
-  stopDetectionLoop();
-  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
-  video.srcObject=null;detector=null;codes=[];detecting=false;stableKey="";stableSince=0;stableResult=null;
-  startBtn.disabled=false;captureBtn.disabled=true;setLive("wait","カメラ未起動","");
-  liveList.innerHTML="";liveEmpty.style.display="block";liveEmpty.textContent="まだQRを検出していません";
-  captured.style.display="none";shot.removeAttribute("src");capturedList.innerHTML="";capturedEmpty.textContent="";
-  octx.clearRect(0,0,overlay.width,overlay.height);
-}
-window.addEventListener("pagehide",resetAll);
-</script>
+    async function resetAll() {
+      stopDetectionLoop();
+      if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null }
+      video.srcObject = null; detector = null; codes = []; detecting = false; stableKey = ""; stableSince = 0; stableResult = null;
+      startBtn.disabled = false; captureBtn.disabled = true; setLive("wait", "カメラ未起動", "");
+      liveList.innerHTML = ""; liveEmpty.style.display = "block"; liveEmpty.textContent = "まだQRを検出していません";
+      captured.style.display = "none"; shot.removeAttribute("src"); capturedList.innerHTML = ""; capturedEmpty.textContent = "";
+      octx.clearRect(0, 0, overlay.width, overlay.height);
+    }
+    window.addEventListener("pagehide", resetAll);
+  </script>
 </body>
+
 </html>
