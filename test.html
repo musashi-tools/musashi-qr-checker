@@ -191,6 +191,12 @@
       color: #222
     }
 
+    .save {
+      margin-top: 10px;
+      background: #198754;
+      color: #fff
+    }
+
     button:disabled {
       opacity: .45
     }
@@ -275,6 +281,10 @@
       <div style="margin-top:10px"><b>撮影時に検出していたQR</b></div>
       <div id="capturedEmpty" class="empty"></div>
       <div id="capturedList"></div>
+
+      <button id="saveBtn" class="save" disabled>
+        加工済み画像を保存
+      </button>
     </div>
 
     <button id="resetBtn" class="reset">最初からやり直す</button>
@@ -298,6 +308,9 @@
     const startBtn = document.getElementById("startBtn");
     const captureBtn = document.getElementById("captureBtn");
     const resetBtn = document.getElementById("resetBtn");
+    const saveBtn = document.getElementById("saveBtn");
+
+    let capturedImageBlob = null;
 
     let stream = null, detector = null, detectionTimer = null, detecting = false, codes = [];
     const analysisCanvas = document.createElement("canvas");
@@ -311,6 +324,7 @@
     startBtn.onclick = startCamera;
     captureBtn.onclick = capturePhoto;
     resetBtn.onclick = resetAll;
+    saveBtn.onclick = saveCapturedImage;
 
     async function startCamera() {
       try {
@@ -603,16 +617,184 @@
       });
     }
 
-    function capturePhoto() {
-      if (!stream || !video.videoWidth) return;
-      canvas.width = video.videoWidth; canvas.height = video.videoHeight; cctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      shot.src = canvas.toDataURL("image/jpeg", .92);
-      const snap = codes.map(x => ({ rawValue: x.rawValue }));
+    async function capturePhoto() {
+      if (!stream || !video.videoWidth || !video.videoHeight) return;
+
+      const snap = codes.map(function (code) {
+        return { rawValue: code.rawValue };
+      });
+
       const result = evaluate(snap);
+      const capturedAt = new Date();
+
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+
+      cctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      drawCaptureInformation(
+        result,
+        snap.length,
+        capturedAt
+      );
+
+      capturedImageBlob = await canvasToBlob(
+        canvas,
+        "image/jpeg",
+        0.92
+      );
+
+      if (!capturedImageBlob) return;
+
+      if (shot.src.startsWith("blob:")) {
+        URL.revokeObjectURL(shot.src);
+      }
+
+      shot.src = URL.createObjectURL(capturedImageBlob);
+
       captured.style.display = "block";
       capturedStatus.className = "status " + result.cls;
-      capturedStatus.innerHTML = '<span class="title">' + result.title + "</span>" + result.detail;
-      renderList(capturedList, capturedEmpty, snap, "撮影時に検出できたQRはありません。目視確認へ回してください。");
+      capturedStatus.innerHTML =
+        '<span class="title">' +
+        result.title +
+        "</span>" +
+        result.detail;
+
+      renderList(
+        capturedList,
+        capturedEmpty,
+        snap,
+        "撮影時に検出できたQRはありません。目視確認へ回してください。"
+      );
+
+      saveBtn.disabled = false;
+
+      captured.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+    }
+
+    function drawCaptureInformation(result, qrCount, capturedAt) {
+      const width = canvas.width;
+      const height = canvas.height;
+      const scale = Math.max(1, Math.min(width, height) / 900);
+
+      const padding = Math.round(24 * scale);
+      const titleSize = Math.round(44 * scale);
+      const detailSize = Math.round(24 * scale);
+      const footerSize = Math.round(22 * scale);
+
+      const panelColor =
+        result.cls === "ok"
+          ? "rgba(20,120,55,0.88)"
+          : result.cls === "ng"
+            ? "rgba(180,20,35,0.90)"
+            : result.cls === "warn"
+              ? "rgba(165,110,0,0.90)"
+              : "rgba(70,70,70,0.86)";
+
+      cctx.save();
+
+      const topHeight = Math.round(145 * scale);
+
+      cctx.fillStyle = panelColor;
+      cctx.fillRect(0, 0, width, topHeight);
+
+      cctx.fillStyle = "#fff";
+      cctx.textBaseline = "top";
+      cctx.font = "bold " + titleSize + "px sans-serif";
+      cctx.fillText(result.title, padding, padding);
+
+      cctx.font = "bold " + detailSize + "px sans-serif";
+      cctx.fillText(
+        result.detail,
+        padding,
+        padding + titleSize + Math.round(12 * scale)
+      );
+
+      const footerHeight = Math.round(62 * scale);
+
+      cctx.fillStyle = "rgba(0,0,0,0.68)";
+      cctx.fillRect(
+        0,
+        height - footerHeight,
+        width,
+        footerHeight
+      );
+
+      cctx.fillStyle = "#fff";
+      cctx.font = "bold " + footerSize + "px sans-serif";
+      cctx.fillText(
+        "QR検出数：" +
+        qrCount +
+        "個　撮影日時：" +
+        formatTimestamp(capturedAt),
+        padding,
+        height - footerHeight + Math.round(17 * scale)
+      );
+
+      cctx.restore();
+    }
+
+    function formatTimestamp(date) {
+      const pad = function (value) {
+        return String(value).padStart(2, "0");
+      };
+
+      return (
+        date.getFullYear() +
+        "/" +
+        pad(date.getMonth() + 1) +
+        "/" +
+        pad(date.getDate()) +
+        " " +
+        pad(date.getHours()) +
+        ":" +
+        pad(date.getMinutes()) +
+        ":" +
+        pad(date.getSeconds())
+      );
+    }
+
+    function canvasToBlob(targetCanvas, type, quality) {
+      return new Promise(function (resolve) {
+        targetCanvas.toBlob(resolve, type, quality);
+      });
+    }
+
+    function saveCapturedImage() {
+      if (!capturedImageBlob) return;
+
+      const now = new Date();
+      const pad = function (value) {
+        return String(value).padStart(2, "0");
+      };
+
+      const filename =
+        "qr-check-" +
+        now.getFullYear() +
+        pad(now.getMonth() + 1) +
+        pad(now.getDate()) +
+        "-" +
+        pad(now.getHours()) +
+        pad(now.getMinutes()) +
+        pad(now.getSeconds()) +
+        ".jpg";
+
+      const url = URL.createObjectURL(capturedImageBlob);
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = filename;
+
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      setTimeout(function () {
+        URL.revokeObjectURL(url);
+      }, 1000);
     }
 
     async function resetAll() {
@@ -621,7 +803,20 @@
       video.srcObject = null; detector = null; codes = []; detecting = false; stableKey = ""; stableSince = 0; stableResult = null;
       startBtn.disabled = false; captureBtn.disabled = true; setLive("wait", "カメラ未起動", "");
       liveList.innerHTML = ""; liveEmpty.style.display = "block"; liveEmpty.textContent = "まだQRを検出していません";
-      captured.style.display = "none"; shot.removeAttribute("src"); capturedList.innerHTML = ""; capturedEmpty.textContent = "";
+      if (shot.src.startsWith("blob:")) {
+        URL.revokeObjectURL(shot.src);
+      }
+
+      capturedImageBlob = null;
+      saveBtn.disabled = true;
+
+      captured.style.display = "none";
+      shot.removeAttribute("src");
+      capturedList.innerHTML = "";
+      capturedEmpty.textContent = "";
+      capturedStatus.className = "status";
+      capturedStatus.innerHTML = "";
+
       octx.clearRect(0, 0, overlay.width, overlay.height);
     }
     window.addEventListener("pagehide", resetAll);
