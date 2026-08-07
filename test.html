@@ -656,6 +656,8 @@
 
       cctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
+      drawCaptureBoxes(codes);
+
       drawCaptureInformation(
         result,
         snap.length,
@@ -697,6 +699,48 @@
           behavior: "smooth"
         });
       }, 100);
+    }
+
+
+    function drawCaptureBoxes(list) {
+      const scaleX = canvas.width / video.videoWidth;
+      const scaleY = canvas.height / video.videoHeight;
+
+      cctx.save();
+      cctx.lineWidth = Math.max(4, canvas.width / 400);
+      cctx.font = "bold " + Math.max(24, canvas.width / 40) + "px sans-serif";
+
+      list.forEach(function (code, index) {
+        if (!code.boundingBox) return;
+
+        const b = code.boundingBox;
+        const x = b.x * scaleX;
+        const y = b.y * scaleY;
+        const w = b.width * scaleX;
+        const h = b.height * scaleY;
+
+        const colors = [
+          "#00bfff",
+          "#00ff66",
+          "#ffcc00",
+          "#ff66cc"
+        ];
+
+        const color = colors[index % colors.length];
+
+        cctx.strokeStyle = color;
+        cctx.fillStyle = color;
+
+        cctx.strokeRect(x, y, w, h);
+
+        cctx.fillText(
+          "QR " + (index + 1),
+          x,
+          Math.max(30, y - 8)
+        );
+      });
+
+      cctx.restore();
     }
 
     function drawCaptureInformation(result, qrCount, capturedAt) {
