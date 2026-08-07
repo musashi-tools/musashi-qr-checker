@@ -154,16 +154,18 @@
     }
 
     #capturedStatus {
-      padding: 8px;
+      padding: 4px 8px;
       margin-top: 6px;
-      font-size: 14px;
+      font-size: 12px;
       border-width: 2px;
+      white-space: nowrap;
+      overflow: hidden;
     }
 
     #capturedStatus .title {
       display: inline;
-      font-size: 18px;
-      margin-right: 8px;
+      font-size: 16px;
+      margin-right: 4px;
     }
 
     .next {
@@ -297,17 +299,15 @@
       <b>撮影した写真</b>
       <img id="shot" alt="撮影画像">
       <div id="capturedStatus" class="status"></div>
-      <div style="margin-top:10px"><b>撮影時に検出していたQR</b></div>
-      <div id="capturedEmpty" class="empty"></div>
-      <div id="capturedList"></div>
+      <div class="buttons">
+        <button id="saveBtn" class="save" disabled>
+          画像を保存
+        </button>
 
-      <button id="saveBtn" class="save" disabled>
-        加工済み画像を保存
-      </button>
-
-      <button id="nextBtn" class="next" disabled>
-        次の撮影へ
-      </button>
+        <button id="nextBtn" class="next" disabled>
+          次の撮影へ
+        </button>
+      </div>
     </div>
 
     <button id="resetBtn" class="reset">最初からやり直す</button>
@@ -684,20 +684,17 @@
         result.title +
         "</span>" +
         result.detail;
-
-      renderList(
-        capturedList,
-        capturedEmpty,
-        snap,
-        "撮影時に検出できたQRはありません。目視確認へ回してください。"
-      );
-
       saveBtn.disabled = false;
       nextBtn.disabled = false;
 
-      captured.scrollIntoView({
-        behavior: "smooth",
-        block: "start"
+      const capturedTop =
+        captured.getBoundingClientRect().top +
+        window.scrollY -
+        10;
+
+      window.scrollTo({
+        top: capturedTop,
+        behavior: "smooth"
       });
     }
 
