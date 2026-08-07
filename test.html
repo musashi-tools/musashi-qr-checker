@@ -289,12 +289,6 @@
       <p class="note">0個・1個・3個以上でも撮影できます。その場合は自動照合せず、目視確認へ回します。</p>
     </div>
 
-    <div class="card">
-      <b>現在検出中のQR</b>
-      <div id="liveEmpty" class="empty">まだQRを検出していません</div>
-      <div id="liveList"></div>
-    </div>
-
     <div id="captured" class="card">
       <b>撮影した写真</b>
       <img id="shot" alt="撮影画像">
@@ -687,15 +681,17 @@
       saveBtn.disabled = false;
       nextBtn.disabled = false;
 
-      const capturedTop =
-        captured.getBoundingClientRect().top +
-        window.scrollY -
-        10;
+      setTimeout(function () {
+        const capturedTop =
+          captured.getBoundingClientRect().top +
+          window.scrollY -
+          10;
 
-      window.scrollTo({
-        top: capturedTop,
-        behavior: "smooth"
-      });
+        window.scrollTo({
+          top: capturedTop,
+          behavior: "smooth"
+        });
+      }, 100);
     }
 
     function drawCaptureInformation(result, qrCount, capturedAt) {
