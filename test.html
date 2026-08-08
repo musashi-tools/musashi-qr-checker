@@ -366,7 +366,8 @@
       try {
         const track = stream.getVideoTracks()[0], caps = track.getCapabilities ? track.getCapabilities() : {}, adv = {};
         if (Array.isArray(caps.focusMode) && caps.focusMode.includes("continuous")) adv.focusMode = "continuous";
-        if (caps.zoom && typeof caps.zoom.max === "number") adv.zoom = Math.min(2, caps.zoom.max);
+        //ズーム解除
+        //if (caps.zoom && typeof caps.zoom.max === "number") adv.zoom = Math.min(2, caps.zoom.max);
         if (Object.keys(adv).length) await track.applyConstraints({ advanced: [adv] });
       } catch (e) { console.log("追加設定非対応", e) }
     }
